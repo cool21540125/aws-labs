@@ -11,6 +11,12 @@ export class LabCdkLambdaStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: "index.handler",
       code: lambda.Code.fromAsset("lambda0324"),
+      // tracing: lambda.Tracing.ACTIVE,  // 開啟 X-Ray
+    });
+    const otherFN = new lambda.Function(this, "lambda0324-other", {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: "other.handler",
+      code: lambda.Code.fromAsset("lambda0324"),
     });
 
     const cert = new acm.Certificate(this, "cert", {
@@ -23,12 +29,16 @@ export class LabCdkLambdaStack extends cdk.Stack {
 
     // 這邊有點不懂的是, 作者說他沒用 Route53, 但我沒設定會無法訪問...
     // 因此還是得去 Route53 A alias 才行 Orz......
-    new apigw.LambdaRestApi(this, 'Endpoint', {
+    const apigw01 = new apigw.LambdaRestApi(this, 'Endpoint', {
       handler: mainFN,
       domainName: {
         domainName: "apigw-cdk.tonychoucc.com",
         certificate: cert
-      }
+      },
+      proxy: false,
     });
+
+    apigw01.root.addMethod("GET", new apigw.LambdaIntegration(mainFN));
+    apigw01.root.addResource("other").addMethod("GET", new apigw.LambdaIntegration(otherFN));
   }
 }
