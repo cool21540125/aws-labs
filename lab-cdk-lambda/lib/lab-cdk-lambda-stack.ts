@@ -17,6 +17,9 @@ export class LabCdkLambdaStack extends cdk.Stack {
       domainName: "*.tonychoucc.com",
       validation: acm.CertificateValidation.fromDns(),
     });
+    new cdk.CfnOutput(this, "ACM-ARN0324", {
+      value: cert.certificateArn,
+    });
 
     // 這邊有點不懂的是, 作者說他沒用 Route53, 但我沒設定會無法訪問...
     // 因此還是得去 Route53 A alias 才行 Orz......
