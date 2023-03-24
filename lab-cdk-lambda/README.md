@@ -1,6 +1,10 @@
 
 - 2023/03/24
 - 使用 cdk 來 deploy `API Gateway` && `Lambda`
+    - 須額外配好 Route53 解析, a 到 APIGW
+    - 裡頭 APIGW 有使用 custom domain(我不是很懂)
+    - 此外也有用到 ACM, 但需要用與此 Stack 相同 Region 的 certs 才行
+        - 我有嘗試使用 已經在使用的 us-east-1 的 cert, 不過失敗 (原因沒詳查)
 - 參考
     - [D6 - cdk deploy Lambda & APIGW](https://ithelp.ithome.com.tw/articles/10240180)
     - [cdk-LambdaRestApi](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigateway.LambdaRestApi.html)
