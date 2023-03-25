@@ -1,0 +1,24 @@
+
+@url=https://s2j4do9l7f.execute-api.us-east-2.amazonaws.com/prod
+# apigw 
+
+
+### 
+GET {{url}}/
+
+
+###
+GET {{url}}/demo_upload.txt
+
+
+### 
+DELETE {{url}}/demo_upload.txt
+
+
+### upload
+POST {{url}}/demo_upload.txt
+Content-Type: multipart/form-data; boundary=--upd
+
+--upd
+Content-Disposition: form-data; name="file"; filename="demo_upload.json"
+Content-Type: application/octet-stream
