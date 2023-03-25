@@ -53,8 +53,28 @@ export class LabCdkVpcEc2Stack extends cdk.Stack {
       ),
       machineImage: ami88,
       securityGroup: sg01,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
       keyName: key99.keyName,
       role: role35,
     });
+
+    // EC2 Instance Role (為了要能用 SSM login)
+    ec2Instance.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "ssmmessages:*",
+          "ssm:UpdateInstanceInformation",
+          "ec2messages:*",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    // EC2 userdata (!! 需要先把機器 Terminate 再來重建才有效果)
+    ec2Instance.addUserData(
+      "yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm"
+    )
   }
 }

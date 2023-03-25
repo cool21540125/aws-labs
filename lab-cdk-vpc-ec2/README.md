@@ -1,4 +1,13 @@
 
+- 2023/03/25
+- 參考:
+    - [cdk-EC2](https://ithelp.ithome.com.tw/articles/10243374)
+    - [cdk-EC2 with SSM](https://ithelp.ithome.com.tw/articles/10243406)
+    - [cdk deploy-webapp-ec2](https://aws.amazon.com/tw/getting-started/guides/deploy-webapp-ec2/module-one/)
+- 使用 cdk 建立 VPC && subnet, 以及一台 EC2, 並可藉由 SSM login
+- 另一個比較有趣的事情是, EC2 給 SSM 必要的 role 以後, 即可由 SSM 做 ssh loggin
+    - 此外也可參考 [use SSM ssh login EC2](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) 來操作 本地端登入 `aws ssm start-session --target ${InstanceID}`
+
 
 ```bash
 ### Version
