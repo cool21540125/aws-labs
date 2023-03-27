@@ -1,8 +1,8 @@
 {
-  "name": "lab-cdk-sns-sqs",
+  "name": "lab-cdk-api-lambda-s3",
   "version": "0.1.0",
   "bin": {
-    "lab-cdk-sns-sqs": "bin/lab-cdk-sns-sqs.js"
+    "lab-cdk-api-lambda-s3": "bin/lab-cdk-api-lambda-s3.js"
   },
   "scripts": {
     "build": "tsc",

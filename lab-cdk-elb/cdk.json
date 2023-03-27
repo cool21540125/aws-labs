@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/lab-cdk-sns-sqs.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/lab-cdk-elb.ts",
   "watch": {
     "include": [
       "**"

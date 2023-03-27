@@ -1,8 +1,8 @@
 {
-  "name": "lab-cdk-sns-sqs",
+  "name": "lab-cdk-vpc-ec2",
   "version": "0.1.0",
   "bin": {
-    "lab-cdk-sns-sqs": "bin/lab-cdk-sns-sqs.js"
+    "lab-cdk-vpc-ec2": "bin/lab-cdk-vpc-ec2.js"
   },
   "scripts": {
     "build": "tsc",

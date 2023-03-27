@@ -2,5 +2,5 @@ venv/
 .vscode/
 node_modules/
 **/.DS_Store
-dist/
-!dist/.gitkeep
+**/cdk.out
+**/dist

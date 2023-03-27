@@ -1,5 +1,6 @@
 
-- 2023/03/23
+- 2023/03/24 (begin)
+- 2023/03/27 (改為 v2 用法)
 - 使用 CDK 建構出 `SNS` && `SQS` && `SNS-Subscription`
     - [Chap4](https://ithelp.ithome.com.tw/articles/10239592)
     - [Chap5](https://ithelp.ithome.com.tw/articles/10240171)
@@ -8,15 +9,13 @@
 ```bash
 ### cdk Version
 cdk --version
-#2.65.0 (build 5862f7a)
-
-
-### Install dependencies
-npm i @aws-cdk/aws-sns @aws-cdk/aws-sns-subscriptions @aws-cdk/aws-sqs @aws-cdk/core
+#2.70.0 (build c13a0f1)
 
 
 ### 首次部署的必要一次性操作(指定 AccountID && Region)
-cdk bootstrap aws://668363134003/ap-northeast-3
+cdk bootstrap aws://668363134003/ap-northeast-3\
+    --toolkit-stack-name $CDK_NAME \
+    --bootstrap-vpc-id $VPC_ID
 
 
 ### 查看目前 cdk 產出的 template (會輸出到 cdk.out/)
@@ -29,7 +28,8 @@ cdk diff
 
 ### 部署到 CloudFormation Stack
 cdk deploy
-# 嘗試了幾次, 似乎無法正常的使用 --region xx 來指定
+# or
+cdk deploy --require-approval never
 
 
 ### 
@@ -37,6 +37,7 @@ cdk destroy
 ```
 
 ------------------------------------------------------------
+
 
 # Welcome to your CDK TypeScript project
 

@@ -1,8 +1,8 @@
 {
-  "name": "lab-cdk-sns-sqs",
+  "name": "lab-cdk-elb",
   "version": "0.1.0",
   "bin": {
-    "lab-cdk-sns-sqs": "bin/lab-cdk-sns-sqs.js"
+    "lab-cdk-elb": "bin/lab-cdk-elb.js"
   },
   "scripts": {
     "build": "tsc",
