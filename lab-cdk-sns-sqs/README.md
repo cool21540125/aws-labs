@@ -29,7 +29,7 @@ cdk diff
 ### 部署到 CloudFormation Stack
 cdk deploy
 # or
-cdk deploy --require-approval nevers
+cdk deploy --require-approval never
 
 
 ### 
