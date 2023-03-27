@@ -1,5 +1,6 @@
 
 - 2023/03/24
+- 2023/03/27 (改用 v2)
 - 使用 cdk 來 deploy `API Gateway` && `Lambda`
     - 須額外配好 Route53 解析, a 到 APIGW
     - 裡頭 APIGW 有使用 custom domain(我不是很懂)
@@ -10,19 +11,22 @@
     - [cdk-LambdaRestApi](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_apigateway.LambdaRestApi.html)
 
 ```bash
-### Install dependencies
-npm i @aws-cdk/core @aws-cdk/aws-lambda
-npm i @aws-cdk/aws-apigateway
-npm i @aws-cdk/aws-certificatemanager
-
+cdk version
+#2.70.0 (build c13a0f1)
 
 ### 首次部署的必要一次性操作(指定 AccountID && Region)
-cdk bootstrap aws://152248006875/us-east-2
+cdk bootstrap aws://152248006875/us-east-2 \
+    --toolkit-stack-name CDKToolkit-ApiGatewayLambda
 
+cdk diff
+cdk synth
 
-### 
-cdk deploy
+cdk deploy --require-approval never
+
+cdk destroy
 ```
+
+---------------------------------------------------------------------
 
 
 # Welcome to your CDK TypeScript project
