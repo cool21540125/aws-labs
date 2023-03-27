@@ -4,10 +4,10 @@
 - 使用 CDK 建構出 `SNS` && `SQS` && `SNS-Subscription`
     - [Chap4](https://ithelp.ithome.com.tw/articles/10239592)
     - [Chap5](https://ithelp.ithome.com.tw/articles/10240171)
+- 使用 CDK 以外, 以存在的 Cert(us-east-1 ARN) && Hosted Zone
 
 
 ```bash
-### cdk Version
 cdk --version
 #2.70.0 (build c13a0f1)
 

@@ -1,5 +1,6 @@
 {
-  "acknowledged-issue-numbers": [
-    19836
-  ]
+  "hosted-zone:account=152248006875:domainName=tonychoucc.com:region=us-east-1": {
+    "Id": "/hostedzone/Z04605913NGSHG1LKZHO2",
+    "Name": "tonychoucc.com."
+  }
 }

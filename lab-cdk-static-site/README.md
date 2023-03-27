@@ -1,25 +1,36 @@
 
-- 2023/03/24 (尚未成功, 卡在 S3Bucket 開不起來...)
+- 2023/03/24
+- 2023/03/27 (改為 v2)
 - [cdk-StaticSite](https://ithelp.ithome.com.tw/articles/10241696)
 - Reference
     - [@aws-cdk/aws-s3-deployment module](https://docs.aws.amazon.com/cdk/api/v1/docs/aws-s3-deployment-readme.html)
     - [d8-部署靜態網頁(寫的有點跳)](https://ithelp.ithome.com.tw/articles/10241696)
+- StaticSite (CloudFront && Certification)
+    - us-east-1
+        - [DNS validation](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager-readme.html#dns-validation)
+    - us-east-1 以外
+        - [Cross-region Certificates](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_certificatemanager-readme.html#cross-region-certificates)
+- 讀取自已存在的 ACM Cert
+    - [Example](https://docs.aws.amazon.com/cdk/api/v1/docs/@aws-cdk_aws-certificatemanager.Certificate.html#example)
 
 ```bash
-### Dependencies
-npm install @aws-cdk/{aws-s3,aws-s3-deployment,aws-certificatemanager,aws-cloudfront,core}
+cdk --version
+#2.70.0 (build c13a0f1)
+
+cdk bootstrap aws://152248006875/us-east-1 \
+    --toolkit-stack-name CDKToolkit-StaticSite
+
+cdk diff
+cdk synth
+cdk deploy --require-approval never
 
 
-### 
-cdk bootstrap aws://152248006875/us-east-1
-
-### 
-cdk deploy
-
-
-### Delete~
+### Lab 清除以前, 需要先清空 Bucket
 cdk destroy
 ```
+
+------------------------------------------------------------
+
 
 # Welcome to your CDK TypeScript project
 
