@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import * as cdk from '@aws-cdk/core';
+import 'source-map-support/register';
+import * as cdk from 'aws-cdk-lib';
 import { LabCdkSnsSqsStack } from '../lib/lab-cdk-sns-sqs-stack';
 
 const app = new cdk.App();
