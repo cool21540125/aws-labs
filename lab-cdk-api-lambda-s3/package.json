@@ -1,8 +1,8 @@
 {
-  "name": "my_widget_service",
+  "name": "lab-cdk-api-lambda-s3",
   "version": "0.1.0",
   "bin": {
-    "my_widget_service": "bin/my_widget_service.js"
+    "lab-cdk-api-lambda-s3": "bin/lab-cdk-api-lambda-s3.js"
   },
   "scripts": {
     "build": "tsc",
@@ -12,15 +12,15 @@
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
-    "@types/node": "18.13.0",
-    "jest": "^29.4.2",
+    "@types/node": "18.14.6",
+    "jest": "^29.5.0",
     "ts-jest": "^29.0.5",
-    "aws-cdk": "2.65.0",
+    "aws-cdk": "2.70.0",
     "ts-node": "^10.9.1",
     "typescript": "~4.9.5"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.65.0",
+    "aws-cdk-lib": "2.70.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }

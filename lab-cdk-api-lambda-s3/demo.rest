@@ -1,10 +1,10 @@
 
-@url=https://s2j4do9l7f.execute-api.us-east-2.amazonaws.com/prod
+@url=https://0aosua8tsd.execute-api.us-east-2.amazonaws.com/prod/
 # apigw 
 
 
 ### 
-GET {{url}}/
+GET {{url}}
 
 
 ###

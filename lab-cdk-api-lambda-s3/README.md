@@ -1,5 +1,6 @@
 
 - 2023/03/25
+- 2023/03/27 (改用 v2)
 - cdk 
     - apigw -- trigger --> lambda -- operate --> S3
     - 作出個 Endpoint, 用來 上傳 & 查看 metadata & 刪除 S3 object
@@ -8,16 +9,22 @@
 
 
 ```bash
-### Install dependencies
-npm i @aws-cdk/core @aws-cdk/aws-lambda @aws-cdk/aws-apigateway
+cdk version
+#2.70.0 (build c13a0f1)
 
+### gogo
+cdk bootstrap aws://668363134003/us-east-2 \
+    --toolkit-stack-name CDKToolkit-ApiGatewayLambdaS3
 
-### 首次部署的必要一次性操作(指定 AccountID && Region)
-cdk bootstrap aws://668363134003/us-east-2
+cdk diff
+cdk synth
 
+cdk deploy --require-approval never
 
-cdk deploy
+cdk destroy
 ```
+
+----------------------------------------------------------------
 
 
 # Welcome to your CDK TypeScript project
