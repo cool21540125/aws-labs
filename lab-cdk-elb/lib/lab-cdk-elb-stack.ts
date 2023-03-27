@@ -1,18 +1,21 @@
 import * as path from 'path';
-import * as cdk from '@aws-cdk/core';
-import * as albv2 from '@aws-cdk/aws-elasticloadbalancingv2';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as iam from '@aws-cdk/aws-iam';
-import * as assets from '@aws-cdk/aws-s3-assets';
-import * as tg from '@aws-cdk/aws-elasticloadbalancingv2-targets';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as assets from 'aws-cdk-lib/aws-s3-assets';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as tg from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
+
 
 export class LabCdkElbStack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
     const httpPort = 80;
 
     // VPC
-    const vpc = new ec2.Vpc(this, 'VPC0325', {
+    const vpc = new ec2.Vpc(this, 'VPC0327', {
       maxAzs: 2,
       natGateways: 0,
     });
@@ -42,15 +45,15 @@ export class LabCdkElbStack extends cdk.Stack {
     );
 
     // ALB
-    const alb = new albv2.ApplicationLoadBalancer(this, "alb0325", {
+    const alb = new elbv2.ApplicationLoadBalancer(this, "alb0327", {
       vpc,
       internetFacing: true,
       securityGroup: albSg,
     });
-    const manual_tg = new albv2.ApplicationTargetGroup(this, "manualTargetGroup", {
+    const manual_tg = new elbv2.ApplicationTargetGroup(this, "manualTargetGroup", {
       vpc,
-      protocol: albv2.ApplicationProtocol.HTTP,
-      targetType: albv2.TargetType.INSTANCE,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      targetType: elbv2.TargetType.INSTANCE,
     });
     tg_sg0328.addIngressRule(albSg, ec2.Port.tcp(80));
     // -----------------
@@ -68,7 +71,7 @@ export class LabCdkElbStack extends cdk.Stack {
       cpuType: ec2.AmazonLinuxCpuType.X86_64,
     });
     const ec2_user_data26 = new assets.Asset(this, "ec2_user_data26", {
-      path: path.join(__dirname, "../", "ec2-config", "init.sh"),
+      path: path.join(__dirname, "../", "ec2-init", "userdata.sh"),
     });
     const role35 = new iam.Role(this, "ec2Role35", {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
@@ -81,7 +84,7 @@ export class LabCdkElbStack extends cdk.Stack {
     });
 
     // EC2 Instance
-    const ec2Instance = new ec2.Instance(this, "Instance0325", {
+    const ec2Instance = new ec2.Instance(this, "Instance0327", {
       vpc,
       instanceType: ec2.InstanceType.of(
         ec2.InstanceClass.T2,

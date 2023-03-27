@@ -1,24 +1,28 @@
 
 - 2023/03/25
+- 2023/03/27 (改為 v2)
 - cdk 建出 ELB
+    - EC2 註冊在 TG 內, 僅能允許由 ELB_SG 近來 80
+        - 22 port 則是 0.0.0.0/0
 - Ref
     - https://ithelp.ithome.com.tw/articles/10245340
 
 ```bash
-### Install
-npm i @aws-cdk/core @aws-cdk/aws-ec2 @aws-cdk/aws-s3-assets @aws-cdk/aws-elasticloadbalancingv2 @aws-cdk/aws-elasticloadbalancingv2-targets
-
+cdk --version
+# 2.70.0 (build c13a0f1)
 
 ### gogo
-cdk bootstrap aws://668363134003/ap-northeast-3
-
-cdk synth
-cdk deploy
+cdk bootstrap aws://668363134003/ap-northeast-3 \
+    --toolkit-stack-name CDKToolkit-ELB
 
 cdk diff
+cdk synth
+cdk deploy --require-approval never
 
 cdk destroy
 ```
+
+----------------------------------------------------------------
 
 
 # Welcome to your CDK TypeScript project
