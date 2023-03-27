@@ -1,5 +1,6 @@
 
 - 2023/03/25
+- 2023/03/27 (改為 cdk v2)
 - 參考:
     - [cdk-EC2](https://ithelp.ithome.com.tw/articles/10243374)
     - [cdk-EC2 with SSM](https://ithelp.ithome.com.tw/articles/10243406)
@@ -15,12 +16,9 @@ cdk --version
 # 2.70.0 (build c13a0f1)
 
 
-### Dependencies
-npm i @aws-cdk/core @aws-cdk/aws-ec2 @aws-cdk/aws-iam @aws-cdk/aws-s3-assets
-
-
 ### gogo
-cdk bootstrap aws://668363134003/ap-northeast-3
+cdk bootstrap aws://668363134003/ap-northeast-3 \
+    --toolkit-stack-name CDKToolkit-VpcEc2
 
 cdk synth
 cdk deploy
@@ -30,6 +28,7 @@ cdk diff
 cdk destroy
 ```
 
+------------------------------------------------------------
 
 # Welcome to your CDK TypeScript project
 

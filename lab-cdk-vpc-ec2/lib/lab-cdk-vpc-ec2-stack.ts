@@ -1,9 +1,10 @@
-import * as cdk from '@aws-cdk/core';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as iam from '@aws-cdk/aws-iam';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class LabCdkVpcEc2Stack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // VPC
@@ -19,7 +20,6 @@ export class LabCdkVpcEc2Stack extends cdk.Stack {
     const key99 = new ec2.CfnKeyPair(this, "KeyPair99", {
       keyName: "cdk-keypair99",
     })
-    // @@ 即使這樣聲明 key-pair, 會因為沒有 download 下來.... 最終還是無法登入進去XD
 
     // Security Group
     const sg01 = new ec2.SecurityGroup(this, "securityGroup25", {
@@ -36,7 +36,7 @@ export class LabCdkVpcEc2Stack extends cdk.Stack {
       ec2.Port.tcp(80),
     );
 
-    // IAM role
+    // IAM role (這邊使用 SSM, 主要是因為 KeyPair 是由 CFN 創建(但無法抓下來), 用來作為 ssh 之用)
     const role35 = new iam.Role(this, "ec2Role35", {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
     });
