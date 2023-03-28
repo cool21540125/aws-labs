@@ -5,3 +5,5 @@ node_modules/
 **/cdk.out
 **/dist
 .env
+**/.gradle/
+**/gradle-wrapper.jar
