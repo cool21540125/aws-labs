@@ -18,4 +18,16 @@ npm install -g generator-jhipster@7.1
 jhipster
 
 
+### Build prod flag App (3~5 mins)
+./gradlew bootWar -Pprod -Pwar
+./gradlew.bat bootWar -Pprod -Pwar
+# 生成 gradle/ && build/
+
+
+### build image from gradle output
+docker build -t tripmgmt .
+
+### 
+docker-compose -f src/main/docker/app.yml up
+
 ```
