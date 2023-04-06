@@ -8,8 +8,8 @@ cdk --version
 
 
 ### gogo
-cdk bootstrap aws://668363134003/ap-northeast-2 \
-    --toolkit-stack-name CDKToolkit-EcsRole0329
+cdk bootstrap aws://668363134003/us-east-1 \
+    --toolkit-stack-name CDKToolkit-ecsWorkshopRoles
 
 cdk synth
 cdk deploy --require-approval never
