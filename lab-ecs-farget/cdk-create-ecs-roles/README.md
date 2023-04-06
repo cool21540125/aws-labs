@@ -1,15 +1,16 @@
 
-- 2023/03/28
+- 2023/04/06
 - 使用 cdk 建立 [ecsTaskExecutionRole](https://catalog.us-east-1.prod.workshops.aws/workshops/4b59b9fb-48b6-461c-9377-907b2e33c9df/en-US/setupawsdeployment/iamroles) 所需要的 Role
 
 ```bash
 cdk --version
-#2.70.0 (build c13a0f1)
+#2.72.1 (build ddbfac7)
 
 
 ### gogo
 cdk bootstrap aws://668363134003/us-east-1 \
-    --toolkit-stack-name CDKToolkit-ecsWorkshopRoles
+    --toolkit-stack-name CDKToolkit-ecs-roles \
+    --s3-prefix toolkit-ecs-roles
 
 cdk synth
 cdk deploy --require-approval never

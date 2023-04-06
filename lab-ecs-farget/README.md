@@ -9,8 +9,8 @@
 
 ```bash
 ### 處理好底下 env
-export AWS_DEFAULT_REGION=ap-northeast-2
-export AWS_REGION=ap-northeast-2
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_REGION=us-east-1
 export AWS_ACCOUNT_ID=668363134003
 echo $JAVA_HOME
 
@@ -36,3 +36,6 @@ docker build -t tripmgmt .
 docker-compose -f src/main/docker/app.yml up
 
 ```
+
+
+Repo url: 668363134003.dkr.ecr.us-east-1.amazonaws.com/devops/tripmgmtdemo

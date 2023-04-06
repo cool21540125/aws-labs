@@ -1,8 +1,8 @@
 {
-  "name": "cdk-create-ecs-execution-role",
+  "name": "cdk-create-ecs-roles",
   "version": "0.1.0",
   "bin": {
-    "cdk-create-ecs-execution-role": "bin/cdk-create-ecs-execution-role.js"
+    "cdk-create-ecs-roles": "bin/cdk-create-ecs-roles.js"
   },
   "scripts": {
     "build": "tsc",
