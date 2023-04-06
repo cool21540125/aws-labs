@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
-class CdkCreateEcsRoleStack extends cdk.Stack {
+export class CdkEcsRoleStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -47,12 +47,3 @@ class CdkCreateEcsRoleStack extends cdk.Stack {
     // 讓 EC2 ASG 可藉由 'AWSServiceRoleForAutoScaling' 這個 service-linked role 去訪問 AWS APIs
   }
 }
-
-const app = new cdk.App();
-new CdkCreateEcsRoleStack(app, 'CdkCreateEcsRoleStack', {
-  
-  env: { account: '668363134003', region: 'us-east-1' },
-  description: 'Create ecs workshop required roles',
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
-});

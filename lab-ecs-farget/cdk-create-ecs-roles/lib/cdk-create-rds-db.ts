@@ -5,7 +5,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 
-class LabCdkRdsStack extends cdk.Stack {
+export class LabCdkRdsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -13,13 +13,13 @@ class LabCdkRdsStack extends cdk.Stack {
     const dbPassword = process.env.dbPassword?.toString()!;
 
     // VPC
-    const vpc = new ec2.Vpc(this, 'Vpc27', {
+    const vpc = new ec2.Vpc(this, 'Vpc06', {
       maxAzs: 2,
       natGateways: 0,
     });
 
     // RDS Security Group
-    const rdsSg = new ec2.SecurityGroup(this, "RdsSecurity27", {
+    const rdsSg = new ec2.SecurityGroup(this, "RdsSecurity06", {
       vpc,
       description: "RDS in this VPC",
       // allowAllOutbound: true,
@@ -31,7 +31,7 @@ class LabCdkRdsStack extends cdk.Stack {
     );
 
     // RDS Instance
-    const rdsInstance = new rds.DatabaseInstance(this, "MySqlInstance27", {
+    const rdsInstance = new rds.DatabaseInstance(this, "MySqlInstance06", {
       engine: rds.DatabaseInstanceEngine.mysql({
         version: rds.MysqlEngineVersion.VER_8_0,
       }),
@@ -44,8 +44,7 @@ class LabCdkRdsStack extends cdk.Stack {
       allocatedStorage: 10,
       credentials: {
         username: "admin",
-        // password: cdk.SecretValue.unsafePlainText("password"),  // @@ 應該有其他方式可以設定初始密碼吧!!
-        password: cdk.SecretValue.unsafePlainText(dbPassword),
+        password: cdk.SecretValue.unsafePlainText("mysql123"),
       },
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC,
@@ -57,18 +56,8 @@ class LabCdkRdsStack extends cdk.Stack {
       databaseName: "tripmgmt",  // Create DB when init
     });
 
-    new cdk.CfnOutput(this, "CfnRds03272200", {
+    new cdk.CfnOutput(this, "CfnRds04062330", {
       value: rdsInstance.dbInstanceEndpointAddress,
     });
   }
 }
-
-const app = new cdk.App();
-new LabCdkRdsStack(app, 'LabCdkRdsStack', {
-  
-  stackName: 'rdsWorkshopStack',
-  env: { account: '668363134003', region: 'us-east-1' },
-  description: 'workshop required RDS stack',
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
-});
