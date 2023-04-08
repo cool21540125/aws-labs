@@ -5,7 +5,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 
-export class LabCdkRdsStack extends cdk.Stack {
+export class CdkEcsRdsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -13,13 +13,13 @@ export class LabCdkRdsStack extends cdk.Stack {
     const dbPassword = process.env.dbPassword?.toString()!;
 
     // VPC
-    const vpc = new ec2.Vpc(this, 'Vpc06', {
+    const vpc = new ec2.Vpc(this, 'RdsVpc', {
       maxAzs: 2,
       natGateways: 0,
     });
 
     // RDS Security Group
-    const rdsSg = new ec2.SecurityGroup(this, "RdsSecurity06", {
+    const rdsSg = new ec2.SecurityGroup(this, "RdsSg", {
       vpc,
       description: "RDS in this VPC",
       // allowAllOutbound: true,
@@ -31,7 +31,7 @@ export class LabCdkRdsStack extends cdk.Stack {
     );
 
     // RDS Instance
-    const rdsInstance = new rds.DatabaseInstance(this, "MySqlInstance06", {
+    const rdsInstance = new rds.DatabaseInstance(this, "rdsInstance", {
       engine: rds.DatabaseInstanceEngine.mysql({
         version: rds.MysqlEngineVersion.VER_8_0,
       }),
@@ -56,7 +56,7 @@ export class LabCdkRdsStack extends cdk.Stack {
       databaseName: "tripmgmt",  // Create DB when init
     });
 
-    new cdk.CfnOutput(this, "CfnRds04062330", {
+    new cdk.CfnOutput(this, "CfnRdsUri", {
       value: rdsInstance.dbInstanceEndpointAddress,
     });
   }

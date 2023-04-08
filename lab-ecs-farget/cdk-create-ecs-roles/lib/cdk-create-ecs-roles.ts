@@ -38,6 +38,16 @@ export class CdkEcsRoleStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('AWSCodeDeployRoleForECS')
     );
 
+    new cdk.CfnOutput(this, "CfnEcsTaskExecutionRoleArn", {
+      value: role1.roleArn,
+    });
+    new cdk.CfnOutput(this, "CfnEcsInstanceRoleArn", {
+      value: role2.roleArn,
+    });
+    new cdk.CfnOutput(this, "CfnEcsCodeDeployRoleArn", {
+      value: role3.roleArn,
+    })
+
     // 4. Service Linked Role for Amazon ECS
     // 信任 ecs.amazonaws.com 主體可以 assume the role
     // 讓 ECS 可藉由 'AWSServiceRoleForECS' 這個 service-linked role 去訪問 AWS APIs
