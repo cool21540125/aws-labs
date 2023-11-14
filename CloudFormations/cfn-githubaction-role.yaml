@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS.
+
+Parameters:
+  GithubActionsThumbprint:
+    Description: >
+      Comma seperated list of thumbprints for GitHub Actions tokens.
+      Default comes from https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/
+    Type: CommaDelimitedList
+    Default: 1B511ABEAD59C6CE207077C0BF0E0043B1382612
+  GithubAccountOrg:
+    Description: GitHub Organization
+    Type: String
+    Default: cool21540125
+  GithubRepo:
+    Description: GitHub Repository
+    Type: String
+    Default: lab-app-action
+  GithubBranch:
+    Description: GitHub Branch
+    Type: String
+    Default: main
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "GitHub Action Info"
+        Parameters:
+          - GithubActionsThumbprint
+          - GithubAccountOrg
+          - GithubRepo
+          - GithubBranch
+      # - Label:
+      #     default: "AWS IAM Info"
+      #   Parameters:
+      #     - Path
+
+Resources:
+  GithubActionsServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Service Role for use in GitHub Actions
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: 
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
+
+Outputs:
+  ServiceRoleARN:
+    Description: arn of service role for use in GitHub actions
+    Value: !GetAtt GithubActionsServiceRole.Arn
