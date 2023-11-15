@@ -1,7 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+
 Description: >
   Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS.
+
 
 Parameters:
   GithubActionsThumbprint:
@@ -18,10 +20,11 @@ Parameters:
     Description: GitHub Repository
     Type: String
     Default: lab-app-action
-  GithubBranch:
-    Description: GitHub Branch
-    Type: String
-    Default: main
+  # GithubBranch:
+  #   Description: GitHub Branch
+  #   Type: String
+  #   Default: main
+
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -33,10 +36,7 @@ Metadata:
           - GithubAccountOrg
           - GithubRepo
           - GithubBranch
-      # - Label:
-      #     default: "AWS IAM Info"
-      #   Parameters:
-      #     - Path
+
 
 Resources:
   GithubActionsServiceRole:
@@ -54,7 +54,21 @@ Resources:
             Condition:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
+                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:*"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        - "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser"
+
+  GithubIdP:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ThumbprintList: !Ref GithubActionsThumbprint
+      ClientIdList:
+        - sts.amazonaws.com
+
 
 Outputs:
   ServiceRoleARN:
