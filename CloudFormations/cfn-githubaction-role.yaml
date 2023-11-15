@@ -20,10 +20,10 @@ Parameters:
     Description: GitHub Repository
     Type: String
     Default: lab-app-action
-  # GithubBranch:
-  #   Description: GitHub Branch
-  #   Type: String
-  #   Default: main
+  GithubBranch:
+    Description: GitHub Branch
+    Type: String
+    Default: main
 
 
 Metadata:
@@ -54,12 +54,12 @@ Resources:
             Condition:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
-              StringLike:
-                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:*"
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
         - "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser"
+        # Login to ECR
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 
   GithubIdP:
     Type: AWS::IAM::OIDCProvider
@@ -69,8 +69,23 @@ Resources:
       ClientIdList:
         - sts.amazonaws.com
 
+  EcsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+
 
 Outputs:
   ServiceRoleARN:
     Description: arn of service role for use in GitHub actions
-    Value: !GetAtt GithubActionsServiceRole.Arn
+    Value: !GetAtt EcsTaskExecutionRole.Arn
+
