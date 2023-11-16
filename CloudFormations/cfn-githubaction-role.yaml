@@ -57,7 +57,10 @@ Resources:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
       ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        # Pull image from ECR
         - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        # Push image to ECR
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 
   GithubIdP:

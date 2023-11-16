@@ -41,6 +41,12 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     });
 
     // Task Definition
+    // const taskDefinition2311 = new ecs.FargateTaskDefinition(this, "taskDefinition2311", {
+    //   memoryLimitMiB: 512,
+    //   cpu: 256,
+    //   executionRole: ecsTaskExecutionRole,
+    // });
+
     const taskDefinition2311 = new ecs.FargateTaskDefinition(this, "taskDefinition2311", {
       memoryLimitMiB: 512,
       cpu: 256,
@@ -48,13 +54,13 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     });
 
     // Container in Task Definition
-    const container = taskDefinition2311.addContainer("container2311", {
-      image: ecs.ContainerImage.fromRegistry(ecr2311.repositoryUri),
-      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "conatinerLog2311" }),
-    });
-    container.addPortMappings({
-      containerPort: 3000,
-    });
+    // const container = taskDefinition2311.addContainer("container2311", {
+    //   image: ecs.ContainerImage.fromRegistry(ecr2311.repositoryUri),
+    //   logging: ecs.LogDrivers.awsLogs({ streamPrefix: "conatinerLog2311" }),
+    // });
+    // container.addPortMappings({
+    //   containerPort: 3000,
+    // });
 
     // Security Group
     const sssgg = new ec2.SecurityGroup(this, "ecsServiceSecurityGroup", {
@@ -62,10 +68,17 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
       securityGroupName: "ecsSg2311",
     });
 
+    const sgEni = new ec2.SecurityGroup(this, "ecsServiceSecurityGroupEni", {
+      vpc: vpc2311,
+      securityGroupName: "ecsSgEni2311",
+    });
+
     // Add Tag to sssgg
     cdk.Tags.of(sssgg).add("Name", "ecsSg2311");
+    cdk.Tags.of(sgEni).add("Name", "ecsEniSg2311");
 
     sssgg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
+    sgEni.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
 
     // Target Group for ALB
     const tttg = new elbv2.ApplicationTargetGroup(this, "tg2311", {
@@ -96,9 +109,10 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     //   cluster: cluster2311,
     //   taskDefinition: taskDefinition2311,
     //   desiredCount: 1,
-    //   assignPublicIp: false,
-    //   healthCheckGracePeriod: cdk.Duration.seconds(60),
+    //   assignPublicIp: true,
+    //   securityGroups: [sssgg],
     // });
+    
 
     // // Auto Scaling
     // const asg2311 = ecsServiceee.autoScaleTaskCount({ maxCapacity: 3, minCapacity: 1 });
