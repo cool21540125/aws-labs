@@ -67,13 +67,39 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
 
     sssgg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
 
+    // Target Group for ALB
+    const tttg = new elbv2.ApplicationTargetGroup(this, "tg2311", {
+      targetGroupName: "tg2311",
+      port: 3000,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      vpc: vpc2311,
+      targetType: elbv2.TargetType.IP,
+    });
+
+    // ALB
+    const aaalb = new elbv2.ApplicationLoadBalancer(this, "alb2311", {
+      loadBalancerName: "alb2311",
+      vpc: vpc2311,
+      internetFacing: true,
+      securityGroup: sssgg,
+    });
+    // const lllistener = aaalb.addListener("listener2311", {
+    //   port: 80,
+    // });
+
+    // Listenr + register Target Group
+    // lllistener.addTargetGroups("targetGroup2311", {
+    //   targetGroups: [tttg],
+    // });
+
     // ECS Service
     // const ecsServiceee = new ecs.FargateService(this, "service2311", {
     //   serviceName: "service2311",
     //   cluster: cluster2311,
     //   taskDefinition: taskDefinition2311,
     //   desiredCount: 1,
-    //   assignPublicIp: true,
+    //   assignPublicIp: false,
+    //   healthCheckGracePeriod: cdk.Duration.seconds(60),
     // });
 
     // // Auto Scaling
@@ -84,38 +110,14 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     //   scaleOutCooldown: cdk.Duration.seconds(60),
     // });
 
-    // // Target Group for ALB
-    // const tttg = new elbv2.ApplicationTargetGroup(this, "tg2311", {
-    //   targetGroupName: "tg2311",
-    //   port: 3000,
-    //   protocol: elbv2.ApplicationProtocol.HTTP,
-    //   vpc: vpc2311,
-    //   targetType: elbv2.TargetType.IP,
-    // });
-
     // tttg.addTarget(ecsServiceee);
-
-    // // ALB + Listener
-    // const aaalb = new elbv2.ApplicationLoadBalancer(this, "alb2311", {
-    //   loadBalancerName: "alb2311",
-    //   vpc: vpc2311,
-    //   internetFacing: true,
-    // });
-    // const lllistener = aaalb.addListener("listener2311", {
-    //   port: 80,
-    // });
-
-    // // Listenr + register Target Group
-    // lllistener.addTargetGroups("targetGroup2311", {
-    //   targetGroups: [tttg],
-    // });
 
     // // Listener all port open
     // lllistener.connections.allowDefaultPortFromAnyIpv4("Open to the world");
 
-    // // Output
-    // new cdk.CfnOutput(this, "LoadBalancerDNS", {
-    //   value: aaalb.loadBalancerDnsName,
-    // });
+    // Output
+    new cdk.CfnOutput(this, "LoadBalancerDNS", {
+      value: aaalb.loadBalancerDnsName,
+    });
   }
 }
