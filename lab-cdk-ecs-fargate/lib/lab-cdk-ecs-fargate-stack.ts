@@ -83,14 +83,12 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
       internetFacing: true,
       securityGroup: sssgg,
     });
-    // const lllistener = aaalb.addListener("listener2311", {
-    //   port: 80,
-    // });
 
     // Listenr + register Target Group
-    // lllistener.addTargetGroups("targetGroup2311", {
-    //   targetGroups: [tttg],
-    // });
+    const lllistener = aaalb.addListener("listener2311", {
+      port: 80,
+      defaultTargetGroups: [tttg],
+    });
 
     // ECS Service
     // const ecsServiceee = new ecs.FargateService(this, "service2311", {
