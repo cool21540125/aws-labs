@@ -19,7 +19,7 @@ cdk synth
 cdk deploy --all --require-approval never
 
 
-cdk destroy
+cdk destroy -vv
 
 
 ### ================= aws CLI ===================
