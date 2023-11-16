@@ -15,11 +15,11 @@ Parameters:
   GithubAccountOrg:
     Description: GitHub Organization
     Type: String
-    Default: cool21540125
+    Default: tonychouccc
   GithubRepo:
     Description: GitHub Repository
     Type: String
-    Default: lab-app-action
+    Default: lab-action-aws
   GithubBranch:
     Description: GitHub Branch
     Type: String
@@ -42,6 +42,7 @@ Resources:
   GithubActionsServiceRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: GithubActionsServiceRole
       Description: Service Role for use in GitHub Actions
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -56,9 +57,7 @@ Resources:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
                 "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-        - "arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser"
-        # Login to ECR
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 
   GithubIdP:
@@ -68,24 +67,3 @@ Resources:
       ThumbprintList: !Ref GithubActionsThumbprint
       ClientIdList:
         - sts.amazonaws.com
-
-  EcsTaskExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: 
-              - "sts:AssumeRole"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-
-
-Outputs:
-  ServiceRoleARN:
-    Description: arn of service role for use in GitHub actions
-    Value: !GetAtt EcsTaskExecutionRole.Arn
-
