@@ -14,24 +14,34 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     super(scope, id, props);
 
     // ECR
-    const ecr2311 = new ecr.Repository(this, "ecr2311", {
-      repositoryName: "ecr2311",
-      // removalPolicy: cdk.RemovalPolicy.DESTROY,
+    const ecrForLineBotFlaskApp = new ecr.Repository(this, "ecrForLineBotFlaskApp", {
+      repositoryName: "ecr-for-linebot-flask-app",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    cdk.Tags.of(ecrForLineBotFlaskApp).add("Name", "ecrForLineBotFlaskApp");
+    cdk.Tags.of(ecrForLineBotFlaskApp).add("Usage", "devopstest");
+
 
     // VPC
-    const vpc2311 = new ec2.Vpc(this, 'vpc2311', {
-      vpcName: "vpc2311",
+    const vpcForLineBotEcs = new ec2.Vpc(this, 'vpcForLineBotEcs', {
+      vpcName: "vpcForLineBotEcs",
       maxAzs: 2,
       natGateways: 0,
     });
+    cdk.Tags.of(vpcForLineBotEcs).add("Name", "vpcForLineBotEcs");
+    cdk.Tags.of(vpcForLineBotEcs).add("Usage", "devopstest");
+
 
     // ECS Cluster
-    const cluster2311 = new ecs.Cluster(this, "cluster2311", {
-      clusterName: "cluster2311",
-      vpc: vpc2311,
+    const ecsClusterForLineBot = new ecs.Cluster(this, "ecsClusterForLineBot", {
+      clusterName: "ecsClusterForLineBot",
+      vpc: vpcForLineBotEcs,
     });
+    cdk.Tags.of(ecsClusterForLineBot).add("Name", "ecsClusterForLineBot");
+    cdk.Tags.of(ecsClusterForLineBot).add("Usage", "devopstest");
 
+
+    // ECS Task Execution Role for task-definition.json
     const ecsTaskExecutionRole = new iam.Role(this, "ecsTaskExecutionRole", {
       roleName: "ecsTaskExecutionRole",
       assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
@@ -39,97 +49,117 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonECSTaskExecutionRolePolicy"),
       ],
     });
+    cdk.Tags.of(ecsTaskExecutionRole).add("Name", "ecsTaskExecutionRole");
+    cdk.Tags.of(ecsTaskExecutionRole).add("Usage", "devopstest");
+
 
     // Task Definition
-    // const taskDefinition2311 = new ecs.FargateTaskDefinition(this, "taskDefinition2311", {
-    //   memoryLimitMiB: 512,
-    //   cpu: 256,
-    //   executionRole: ecsTaskExecutionRole,
-    // });
-
-    const taskDefinition2311 = new ecs.FargateTaskDefinition(this, "taskDefinition2311", {
-      memoryLimitMiB: 512,
-      cpu: 256,
+    const taskDefLineBotFlask = new ecs.FargateTaskDefinition(this, "taskDefLineBotFlask", {
+      family: "taskDefLineBotFlask",
+      cpu: 1024,
+      memoryLimitMiB: 2048,
       executionRole: ecsTaskExecutionRole,
     });
+    cdk.Tags.of(taskDefLineBotFlask).add("Name", "taskDefLineBotFlask");
+    cdk.Tags.of(taskDefLineBotFlask).add("Usage", "devopstest");
 
-    // Container in Task Definition
-    // const container = taskDefinition2311.addContainer("container2311", {
-    //   image: ecs.ContainerImage.fromRegistry(ecr2311.repositoryUri),
-    //   logging: ecs.LogDrivers.awsLogs({ streamPrefix: "conatinerLog2311" }),
-    // });
-    // container.addPortMappings({
-    //   containerPort: 3000,
-    // });
-
-    // Security Group
-    const sssgg = new ec2.SecurityGroup(this, "ecsServiceSecurityGroup", {
-      vpc: vpc2311,
-      securityGroupName: "ecsSg2311",
+    // Task Definition - Container
+    const ecsContainer = taskDefLineBotFlask.addContainer("web-api", {
+      containerName: "web-api",
+      image: ecs.ContainerImage.fromRegistry(ecrForLineBotFlaskApp.repositoryUri),
+      logging: ecs.LogDrivers.awsLogs({ 
+        streamPrefix: "/logEcs",
+        logRetention: 3,
+      }),
+      essential: true,
+      cpu: 1024,
+      environment: {
+        "FLASK_PORT": "5000",
+      },
+    });
+    ecsContainer.addPortMappings({
+      containerPort: 5000,
+      hostPort: 5000,
+      name: "fargate-port-mapping-to-flask-app",
     });
 
-    const sgEni = new ec2.SecurityGroup(this, "ecsServiceSecurityGroupEni", {
-      vpc: vpc2311,
-      securityGroupName: "ecsSgEni2311",
+
+    // SG - ALB
+    const albSGLineBot = new ec2.SecurityGroup(this, "albSGLineBot", {
+      vpc: vpcForLineBotEcs,
+      securityGroupName: "albSGLineBot",
     });
+    cdk.Tags.of(albSGLineBot).add("Name", "albSGLineBot");
+    cdk.Tags.of(albSGLineBot).add("Usage", "devopstest");
+    albSGLineBot.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
 
-    // Add Tag to sssgg
-    cdk.Tags.of(sssgg).add("Name", "ecsSg2311");
-    cdk.Tags.of(sgEni).add("Name", "ecsEniSg2311");
 
-    sssgg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
-    sgEni.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
-
-    // Target Group for ALB
-    const tttg = new elbv2.ApplicationTargetGroup(this, "tg2311", {
-      targetGroupName: "tg2311",
-      port: 3000,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      vpc: vpc2311,
-      targetType: elbv2.TargetType.IP,
+    // SG - ECS
+    const ecsSgLineBot = new ec2.SecurityGroup(this, "ecsServiceSecurityGroupEni", {
+      vpc: vpcForLineBotEcs,
+      securityGroupName: "ecsSgLineBot",
     });
+    cdk.Tags.of(ecsSgLineBot).add("Name", "ecsSgLineBot");
+    cdk.Tags.of(ecsSgLineBot).add("Usage", "devopstest");
+    ecsSgLineBot.addIngressRule(albSGLineBot, ec2.Port.tcp(80), "allow 80 port");
+
 
     // ALB
-    const aaalb = new elbv2.ApplicationLoadBalancer(this, "alb2311", {
-      loadBalancerName: "alb2311",
-      vpc: vpc2311,
+    const albToEcsFlaskBot = new elbv2.ApplicationLoadBalancer(this, "albToEcsFlaskBot", {
+      loadBalancerName: "albToEcsFlaskBot",
+      vpc: vpcForLineBotEcs,
       internetFacing: true,
-      securityGroup: sssgg,
+      securityGroup: albSGLineBot,
     });
+    cdk.Tags.of(albToEcsFlaskBot).add("Name", "albToEcsFlaskBot");
+    cdk.Tags.of(albToEcsFlaskBot).add("Usage", "devopstest");
 
-    // Listenr + register Target Group
-    const lllistener = aaalb.addListener("listener2311", {
+
+    // TG for ALB
+    const tgForAlbToEcs = new elbv2.ApplicationTargetGroup(this, "tgForAlbToEcs", {
+      targetGroupName: "tgForAlbToEcs",
       port: 80,
-      defaultTargetGroups: [tttg],
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      vpc: vpcForLineBotEcs,
+      targetType: elbv2.TargetType.IP,
+    });
+    cdk.Tags.of(tgForAlbToEcs).add("Name", "tgForAlbToEcs");
+    cdk.Tags.of(tgForAlbToEcs).add("Usage", "devopstest");
+
+
+    // Listenr + register TG
+    const listenerForAlb = albToEcsFlaskBot.addListener("listenerForAlb", {
+      port: 80,
+      defaultTargetGroups: [tgForAlbToEcs],
     });
 
     // ECS Service
     // const ecsServiceee = new ecs.FargateService(this, "service2311", {
     //   serviceName: "service2311",
-    //   cluster: cluster2311,
-    //   taskDefinition: taskDefinition2311,
+    //   cluster: ecsClusterForLineBot,
+    //   taskDefinition: taskDefLineBotFlask,
     //   desiredCount: 1,
     //   assignPublicIp: true,
-    //   securityGroups: [sssgg],
+    //   securityGroups: [ecsSgLineBot],
     // });
     
 
     // // Auto Scaling
-    // const asg2311 = ecsServiceee.autoScaleTaskCount({ maxCapacity: 3, minCapacity: 1 });
-    // asg2311.scaleOnCpuUtilization("CpuScaling", {
+    // const asgForLineBotSvc = ecsServiceee.autoScaleTaskCount({ maxCapacity: 3, minCapacity: 1 });
+    // asgForLineBotSvc.scaleOnCpuUtilization("CpuScaling", {
     //   targetUtilizationPercent: 80,
     //   scaleInCooldown: cdk.Duration.seconds(60),
     //   scaleOutCooldown: cdk.Duration.seconds(60),
     // });
 
-    // tttg.addTarget(ecsServiceee);
+    // tgForAlbToEcs.addTarget(ecsServiceee);
 
     // // Listener all port open
-    // lllistener.connections.allowDefaultPortFromAnyIpv4("Open to the world");
+    // listenerForAlb.connections.allowDefaultPortFromAnyIpv4("Open to the world");
 
-    // Output
-    new cdk.CfnOutput(this, "LoadBalancerDNS", {
-      value: aaalb.loadBalancerDnsName,
-    });
+    // // Output
+    // new cdk.CfnOutput(this, "LoadBalancerDNS", {
+    //   value: albToEcsFlaskBot.loadBalancerDnsName,
+    // });
   }
 }
