@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import * as iam from "aws-cdk-lib/aws-iam";
-
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -101,7 +100,7 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     });
     cdk.Tags.of(ecsSgLineBot).add("Name", "ecsSgLineBot");
     cdk.Tags.of(ecsSgLineBot).add("Usage", "devopstest");
-    ecsSgLineBot.addIngressRule(albSGLineBot, ec2.Port.tcp(80), "allow 80 port");
+    ecsSgLineBot.addIngressRule(albSGLineBot, ec2.Port.tcp(5000), "allow 5000 port");
 
 
     // ALB
@@ -133,33 +132,31 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
       defaultTargetGroups: [tgForAlbToEcs],
     });
 
+
+    // =========== 需要先上傳 ECR image 才能執行下面動作 ===========
+
+
     // ECS Service
-    // const ecsServiceee = new ecs.FargateService(this, "service2311", {
-    //   serviceName: "service2311",
-    //   cluster: ecsClusterForLineBot,
-    //   taskDefinition: taskDefLineBotFlask,
-    //   desiredCount: 1,
-    //   assignPublicIp: true,
-    //   securityGroups: [ecsSgLineBot],
-    // });
-    
+    const ecsServiceLineBot = new ecs.FargateService(this, "ecsServiceLineBot", {
+      serviceName: "ecsServiceLineBot",
+      cluster: ecsClusterForLineBot,
+      taskDefinition: taskDefLineBotFlask,
+      desiredCount: 1,
+      assignPublicIp: true,
+      securityGroups: [ecsSgLineBot],
+      healthCheckGracePeriod: cdk.Duration.seconds(10),
+    });
+    cdk.Tags.of(ecsServiceLineBot).add("Name", "ecsServiceLineBot");
+    cdk.Tags.of(ecsServiceLineBot).add("Usage", "devopstest");
 
-    // // Auto Scaling
-    // const asgForLineBotSvc = ecsServiceee.autoScaleTaskCount({ maxCapacity: 3, minCapacity: 1 });
-    // asgForLineBotSvc.scaleOnCpuUtilization("CpuScaling", {
-    //   targetUtilizationPercent: 80,
-    //   scaleInCooldown: cdk.Duration.seconds(60),
-    //   scaleOutCooldown: cdk.Duration.seconds(60),
-    // });
 
-    // tgForAlbToEcs.addTarget(ecsServiceee);
+    // Register ECS Service to TG: tgForAlbToEcs
+    tgForAlbToEcs.addTarget(ecsServiceLineBot);
 
-    // // Listener all port open
-    // listenerForAlb.connections.allowDefaultPortFromAnyIpv4("Open to the world");
 
-    // // Output
-    // new cdk.CfnOutput(this, "LoadBalancerDNS", {
-    //   value: albToEcsFlaskBot.loadBalancerDnsName,
-    // });
+    // Output
+    new cdk.CfnOutput(this, "LoadBalancerDNS", {
+      value: albToEcsFlaskBot.loadBalancerDnsName,
+    });
   }
 }
