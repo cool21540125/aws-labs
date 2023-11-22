@@ -55,7 +55,18 @@ Resources:
             Condition:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}:refs/tags/release/*"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:*"
+                # 還不確定該怎麼設定成下面那樣
+                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
+                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/tags/release/*"
+      Tags:
+        - Key: "Usage-Github-Team"
+          Value: "wdc-sdk-team"
+        - Key: "Usage-Github-Repo"
+          Value: "wondercise-ai-customer-service-chatbot"
+        - Key: "Target-Reource"
+          Value: "ECS and ECR"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
         # - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -69,3 +80,8 @@ Resources:
       ThumbprintList: !Ref GithubActionsThumbprint
       ClientIdList:
         - sts.amazonaws.com
+      Tags:
+        - Key: "Usage-Github-Team"
+          Value: "wdc-sdk-team"
+        - Key: "Usage-Github-Repo"
+          Value: "wondercise-ai-customer-service-chatbot"
