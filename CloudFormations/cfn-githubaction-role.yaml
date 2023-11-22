@@ -69,7 +69,6 @@ Resources:
           Value: "ECS and ECR"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-        # - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
         - !Sub "arn:aws:iam::${AWS::AccountId}:policy/ECR_PushImage"
 
