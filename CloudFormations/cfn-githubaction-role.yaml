@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 
 
 Description: >
-  Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS used by wdc-sdk-team/wondercise-ai-customer-service-chatbot
+  Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS used by Github Project
 
 
 Parameters:
@@ -15,7 +15,7 @@ Parameters:
   GithubAccountOrg:
     Description: GitHub Organization
     Type: String
-    Default: tonychouccc
+    Default: cool21540125
   GithubRepo:
     Description: GitHub Repository
     Type: String
@@ -43,7 +43,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: GithubActionEcsExecutionRole
-      Description: Execution Role for GitHub Project - wdc-sdk-team/wondercise-ai-customer-service-chatbot (created by CloudFormation, DO NOT edit this role directly)
+      Description: Execution Role for GitHub Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -56,15 +56,22 @@ Resources:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
               StringLike:
-                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:*"
-                # 還不確定該怎麼設定成下面那樣
-                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
-                # "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/tags/release/*"
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/master"
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: 
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/tags/*"
       Tags:
         - Key: "Usage-Github-Team"
-          Value: "wdc-sdk-team"
+          Value: "YOUR_GITHUB_TEAM"
         - Key: "Usage-Github-Repo"
-          Value: "wondercise-ai-customer-service-chatbot"
+          Value: "YOUR_GITHUB_REPO"
         - Key: "Target-Reource"
           Value: "ECS and ECR"
       ManagedPolicyArns:
@@ -80,7 +87,5 @@ Resources:
       ClientIdList:
         - sts.amazonaws.com
       Tags:
-        - Key: "Usage-Github-Team"
-          Value: "wdc-sdk-team"
-        - Key: "Usage-Github-Repo"
-          Value: "wondercise-ai-customer-service-chatbot"
+        - Key: "Usage"
+          Value: "Github OIDC IdP"
