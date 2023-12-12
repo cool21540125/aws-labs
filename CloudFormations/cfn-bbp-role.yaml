@@ -1,0 +1,82 @@
+# bitbucket-oidc-and-roles-for-wonderciserestapi
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  This template creates role and OIDC IdP for wonderciserestapi in Bitbucket Pipeline.
+
+Parameters:
+  BitbucketPipelineThumbprint:
+    Description: >
+      Comma seperated list of thumbprints for Bitbucket Pipeline tokens.
+    Type: CommaDelimitedList
+    Default: a031c46782e6e6c662c2c87c76da9aa62ccabd8e
+  OidcProvider:
+    Description: >
+      Bitbucket OIDC Provider of wonderciserestapi
+    Type: String
+    Default: api.bitbucket.org/2.0/workspaces/WonderCore_INFO/pipelines-config/identity/oidc
+  RepoUUID:
+    Description: >
+      Bitbucket RepoUUID
+    Type: String
+    Default: f42ddf58-07c9-4e11-a734-31166e4fef43
+
+Resources:
+  BitbucketPipelineEcsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: wonderciserestapi-role-to-use-bbp-to-update-aws-resources
+      Description: Execution Role for Bitbucket Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
+      # Reference: https://github.com/aws/amazon-eks-pod-identity-webhook/issues/30
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Federated": "${IamOidcProviderArn}"
+                },
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {
+                  "StringEquals": {
+                    "${OidcProvider}:sub": "${TargetRepo}"
+                  }
+                }
+              }
+            ]
+          }
+        - IamOidcProviderArn: !Join
+            - ''
+            - - 'arn:aws:iam::'
+              - !Ref AWS::AccountId
+              - ':oidc-provider/'
+              - !Sub ${OidcProvider}
+          TargetRepo: 
+            !Sub "ari:cloud:bitbucket::workspace/${RepoUUID}"
+
+      Tags:
+        - Key: "Usage"
+          Value: "wonderciserestapi"
+        - Key: "Target-Reource"
+          Value: "ECS and ECR"
+        - Key: "CreatedBy"
+          Value: "CloudFormation Template - DO NOT edit this role directly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        - "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+        - !Sub "arn:aws:iam::${AWS::AccountId}:policy/ECR_PushImage"
+
+  BitbucketIdP:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: !Sub https://${OidcProvider}
+      ThumbprintList: !Ref BitbucketPipelineThumbprint
+      ClientIdList:
+        - ari:cloud:bitbucket::workspace/f42ddf58-07c9-4e11-a734-31166e4fef43
+      Tags:
+        - Key: "Usage"
+          Value: "wonderciserestapi in Bitbucket Pipeline"
+        - Key: "CreatedBy"
+          Value: "CloudFormation Template - DO NOT edit this role directly"
