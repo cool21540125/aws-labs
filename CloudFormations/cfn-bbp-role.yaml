@@ -1,7 +1,10 @@
 # bitbucket-oidc-and-roles-for-wonderciserestapi
 AWSTemplateFormatVersion: "2010-09-09"
+
+
 Description: >
   This template creates role and OIDC IdP for wonderciserestapi in Bitbucket Pipeline.
+
 
 Parameters:
   BitbucketPipelineThumbprint:
@@ -20,12 +23,18 @@ Parameters:
     Type: String
     Default: f42ddf58-07c9-4e11-a734-31166e4fef43
 
+
 Resources:
   BitbucketPipelineEcsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: wonderciserestapi-role-to-use-bbp-to-update-aws-resources
       Description: Execution Role for Bitbucket Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        - "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+        - !Sub "arn:aws:iam::${AWS::AccountId}:policy/ECR_PushImage"
       # Reference: https://github.com/aws/amazon-eks-pod-identity-webhook/issues/30
       AssumeRolePolicyDocument: !Sub
         - |
@@ -62,11 +71,7 @@ Resources:
           Value: "ECS and ECR"
         - Key: "CreatedBy"
           Value: "CloudFormation Template - DO NOT edit this role directly"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-        - "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
-        - !Sub "arn:aws:iam::${AWS::AccountId}:policy/ECR_PushImage"
+
 
   BitbucketIdP:
     Type: AWS::IAM::OIDCProvider
@@ -74,7 +79,7 @@ Resources:
       Url: !Sub https://${OidcProvider}
       ThumbprintList: !Ref BitbucketPipelineThumbprint
       ClientIdList:
-        - ari:cloud:bitbucket::workspace/f42ddf58-07c9-4e11-a734-31166e4fef43
+        - !Sub ari:cloud:bitbucket::workspace/${RepoUUID}
       Tags:
         - Key: "Usage"
           Value: "wonderciserestapi in Bitbucket Pipeline"
