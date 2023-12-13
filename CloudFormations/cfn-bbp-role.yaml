@@ -40,7 +40,7 @@ Resources:
                 "Action": "sts:AssumeRoleWithWebIdentity",
                 "Condition": {
                   "StringEquals": {
-                    "${OidcProvider}:sub": "${TargetRepo}"
+                    "${OidcProvider}:aud": "${TargetRepo}"
                   }
                 }
               }
