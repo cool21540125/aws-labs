@@ -1,9 +1,9 @@
-# bitbucket-oidc-and-roles-for-wonderciserestapi
+# bitbucket-oidc-and-roles-for-WonderCoreINFO
 AWSTemplateFormatVersion: "2010-09-09"
 
 
 Description: >
-  This template creates role and OIDC IdP for wonderciserestapi in Bitbucket Pipeline.
+  This template creates role and OIDC IdP for WonderCoreINFO in Bitbucket Pipeline.
 
 
 Parameters:
@@ -14,12 +14,12 @@ Parameters:
     Default: a031c46782e6e6c662c2c87c76da9aa62ccabd8e
   OidcProvider:
     Description: >
-      Bitbucket OIDC Provider of wonderciserestapi
+      Bitbucket OIDC Provider of WonderCoreINFO
     Type: String
     Default: api.bitbucket.org/2.0/workspaces/WonderCore_INFO/pipelines-config/identity/oidc
-  RepoUUID:
+  WorkspaceUuid:
     Description: >
-      Bitbucket RepoUUID
+      Bitbucket WorkspaceUuid
     Type: String
     Default: f42ddf58-07c9-4e11-a734-31166e4fef43
 
@@ -28,7 +28,7 @@ Resources:
   BitbucketPipelineEcsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: wonderciserestapi-role-to-use-bbp-to-update-aws-resources
+      RoleName: WonderCoreINFO-role-to-use-bbp-to-update-aws-resources
       Description: Execution Role for Bitbucket Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
@@ -62,11 +62,10 @@ Resources:
               - ':oidc-provider/'
               - !Sub ${OidcProvider}
           TargetRepo: 
-            !Sub "ari:cloud:bitbucket::workspace/${RepoUUID}"
-
+            !Sub "ari:cloud:bitbucket::workspace/${WorkspaceUuid}"
       Tags:
         - Key: "Usage"
-          Value: "wonderciserestapi"
+          Value: "Bitbucket projects under WonderCoreINFO"
         - Key: "Target-Reource"
           Value: "ECS and ECR"
         - Key: "CreatedBy"
@@ -79,9 +78,9 @@ Resources:
       Url: !Sub https://${OidcProvider}
       ThumbprintList: !Ref BitbucketPipelineThumbprint
       ClientIdList:
-        - !Sub ari:cloud:bitbucket::workspace/${RepoUUID}
+        - !Sub ari:cloud:bitbucket::workspace/${WorkspaceUuid}
       Tags:
         - Key: "Usage"
-          Value: "wonderciserestapi in Bitbucket Pipeline"
+          Value: "Bitbucket projects under WonderCoreINFO"
         - Key: "CreatedBy"
           Value: "CloudFormation Template - DO NOT edit this role directly"
