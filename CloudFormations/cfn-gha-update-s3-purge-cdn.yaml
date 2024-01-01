@@ -1,0 +1,91 @@
+# gha-hugo-blog-permissions
+AWSTemplateFormatVersion: "2010-09-09"
+
+
+Description: >
+  Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS used by Github Project
+
+
+Parameters:
+  GithubActionsThumbprint:
+    Description: >
+      Comma seperated list of thumbprints for GitHub Actions tokens.
+      Default comes from https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/
+    Type: CommaDelimitedList
+    Default: 1B511ABEAD59C6CE207077C0BF0E0043B1382612
+  GithubAccountOrg:
+    Description: GitHub Organization
+    Type: String
+    Default: cool21540125
+  GithubRepo:
+    Description: GitHub Repository
+    Type: String
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "GitHub Action Info"
+        Parameters:
+          - GithubActionsThumbprint
+          - GithubAccountOrg
+          - GithubRepo
+
+
+Resources:
+  GHActionRoles:
+    Type: AWS::IAM::Role
+    DependsOn: CreateCloudFrontDistributionInvalidation
+    Properties:
+      RoleName: GHActionRoles
+      Description: Role for GitHub Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: 
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/*"
+      Tags:
+        - Key: "Usage-Github-Team"
+          Value: "YOUR_GITHUB_TEAM"
+        - Key: "Usage-Github-Repo"
+          Value: "YOUR_GITHUB_REPO"
+        - Key: "Target-Reource"
+          Value: "ECS and ECR"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - !Ref CreateCloudFrontDistributionInvalidation
+
+  CreateCloudFrontDistributionInvalidation:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: GHACreateCloudFrontInvalidation
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'cloudfront:CreateInvalidation'
+            Resource: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/*
+
+
+  GithubIdP:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ThumbprintList: !Ref GithubActionsThumbprint
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: "Usage"
+          Value: "Github OIDC IdP"
