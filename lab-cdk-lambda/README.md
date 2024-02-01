@@ -12,7 +12,7 @@
 
 ```bash
 cdk version
-#2.70.0 (build c13a0f1)
+#2.125.0 (build 5e3c3c6)
 
 ### 首次部署的必要一次性操作(指定 AccountID && Region)
 cdk bootstrap aws://152248006875/us-east-2 \
