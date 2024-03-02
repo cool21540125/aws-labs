@@ -1,0 +1,3 @@
+[submodule "poc-debug-aws-lambda"]
+	path = poc-debug-aws-lambda
+	url = git@github.com:cool21540125/poc-debug-aws-lambda.git

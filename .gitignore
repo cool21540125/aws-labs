@@ -9,3 +9,4 @@ node_modules/
 **/.gradle/
 **/gradle-wrapper.jar
 **/.aws-sam
+**/output.json
