@@ -4,9 +4,6 @@ import * as cdk from 'aws-cdk-lib';
 import { LabCdkVpcEc2Stack } from '../lib/lab-cdk-vpc-ec2-stack';
 
 const app = new cdk.App();
-new LabCdkVpcEc2Stack(app, 'LabCdkVpcEc2Stack', {
-  
-  env: { account: '668363134003', region: 'ap-northeast-3' },
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
+new LabCdkVpcEc2Stack(app, 'cdk-vpc-ec2-stack', {
+  env: { account: process.env.AWS_ACCOUNT, region: process.env.AWS_REGION },
 });
