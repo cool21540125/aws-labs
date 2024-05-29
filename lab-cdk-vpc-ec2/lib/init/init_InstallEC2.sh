@@ -21,6 +21,7 @@ systemctl enable amazon-cloudwatch-agent
 # # Code Deploy Agent
 # wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
 # chmod +x ./install
+# yum install -y ruby  # 此份 install 腳本, 使用 ruby 執行
 # ./install auto
 
 ### Nginx

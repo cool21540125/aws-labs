@@ -1,0 +1,898 @@
+# https://lumigo.awsworkshop.io/001_module.html
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: The AWS CloudFormation template for this Serverless application
+
+Resources:
+  ServerlessDeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+  ServerlessDeploymentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ServerlessDeploymentBucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:*
+            Effect: Deny
+            Principal: "*"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: ServerlessDeploymentBucket
+                    - "/*"
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: ServerlessDeploymentBucket
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+  RequestUnicornLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/lumigo-workshop-tonychoucc-dev-requestUnicorn"
+  UploadReceiptLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/lumigo-workshop-tonychoucc-dev-uploadReceipt"
+  SumRidesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/lumigo-workshop-tonychoucc-dev-sumRides"
+  CalcSalariesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/lumigo-workshop-tonychoucc-dev-calcSalaries"
+  RecordRideLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/lumigo-workshop-tonychoucc-dev-recordRide"
+  IamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:TagResource
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev*:*
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeStream
+                  - dynamodb:ListStreams
+                Resource:
+                  - Fn::GetAtt:
+                      - Rides
+                      - StreamArn
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - Ref: AWS::Region
+            - lambdaRole
+  RequestUnicornLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: ServerlessDeploymentBucket
+        S3Key: serverless/lumigo-workshop-tonychoucc/dev/1712749012256-2024-04-10T11:36:52.256Z/lumigo-workshop-tonychoucc.zip
+      Handler: functions/requestUnicorn.handler
+      Runtime: nodejs16.x
+      FunctionName: lumigo-workshop-tonychoucc-dev-requestUnicorn
+      MemorySize: 1024
+      Timeout: 6
+      Environment:
+        Variables:
+          UNICORN_STABLE_API: h48kqx343c.execute-api.us-east-1.amazonaws.com/dev
+          TOPIC_NAME:
+            Fn::GetAtt:
+              - UnicornDispatched
+              - TopicName
+          TOPIC_ARN:
+            Ref: UnicornDispatched
+          TABLE_NAME:
+            Ref: OccupiedUnicorns
+          TABLE_ARN:
+            Fn::GetAtt:
+              - OccupiedUnicorns
+              - Arn
+      Role:
+        Fn::GetAtt:
+          - RequestUnicornIamRoleLambdaExecution
+          - Arn
+    DependsOn:
+      - RequestUnicornIamRoleLambdaExecution
+      - RequestUnicornLogGroup
+  UploadReceiptLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: ServerlessDeploymentBucket
+        S3Key: serverless/lumigo-workshop-tonychoucc/dev/1712749012256-2024-04-10T11:36:52.256Z/lumigo-workshop-tonychoucc.zip
+      Handler: functions/uploadReceipt.handler
+      Runtime: nodejs16.x
+      FunctionName: lumigo-workshop-tonychoucc-dev-uploadReceipt
+      MemorySize: 1024
+      Timeout: 6
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: RideReceipts
+          BUCKET_ARN:
+            Fn::GetAtt:
+              - RideReceipts
+              - Arn
+      Role:
+        Fn::GetAtt:
+          - UploadReceiptIamRoleLambdaExecution
+          - Arn
+    DependsOn:
+      - UploadReceiptIamRoleLambdaExecution
+      - UploadReceiptLogGroup
+  SumRidesLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: ServerlessDeploymentBucket
+        S3Key: serverless/lumigo-workshop-tonychoucc/dev/1712749012256-2024-04-10T11:36:52.256Z/lumigo-workshop-tonychoucc.zip
+      Handler: functions/sumRides.handler
+      Runtime: nodejs16.x
+      FunctionName: lumigo-workshop-tonychoucc-dev-sumRides
+      MemorySize: 1024
+      Timeout: 6
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: UnicornStats
+          TABLE_ARN:
+            Fn::GetAtt:
+              - UnicornStats
+              - Arn
+      Role:
+        Fn::GetAtt:
+          - SumRidesIamRoleLambdaExecution
+          - Arn
+    DependsOn:
+      - SumRidesIamRoleLambdaExecution
+      - SumRidesLogGroup
+  CalcSalariesLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: ServerlessDeploymentBucket
+        S3Key: serverless/lumigo-workshop-tonychoucc/dev/1712749012256-2024-04-10T11:36:52.256Z/lumigo-workshop-tonychoucc.zip
+      Handler: functions/calcSalaries.handler
+      Runtime: nodejs16.x
+      FunctionName: lumigo-workshop-tonychoucc-dev-calcSalaries
+      MemorySize: 1024
+      Timeout: 6
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: UnicornStats
+          TABLE_ARN:
+            Fn::GetAtt:
+              - UnicornStats
+              - Arn
+          BUCKET_NAME:
+            Ref: UnicornSalaries
+          BUCKET_ARN:
+            Fn::GetAtt:
+              - UnicornSalaries
+              - Arn
+          UNICORN_STABLE_API: h48kqx343c.execute-api.us-east-1.amazonaws.com/dev
+      Role:
+        Fn::GetAtt:
+          - CalcSalariesIamRoleLambdaExecution
+          - Arn
+    DependsOn:
+      - CalcSalariesIamRoleLambdaExecution
+      - CalcSalariesLogGroup
+  RecordRideLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: ServerlessDeploymentBucket
+        S3Key: serverless/lumigo-workshop-tonychoucc/dev/1712749012256-2024-04-10T11:36:52.256Z/lumigo-workshop-tonychoucc.zip
+      Handler: functions/recordRide.handler
+      Runtime: nodejs16.x
+      FunctionName: lumigo-workshop-tonychoucc-dev-recordRide
+      MemorySize: 1024
+      Timeout: 6
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: Rides
+          TABLE_ARN:
+            Fn::GetAtt:
+              - Rides
+              - Arn
+      Role:
+        Fn::GetAtt:
+          - RecordRideIamRoleLambdaExecution
+          - Arn
+    DependsOn:
+      - RecordRideIamRoleLambdaExecution
+      - RecordRideLogGroup
+  RequestUnicornLambdaVersionA2o3Er2k5OeazSkB5B9EhYdtvRkczFZ7i6WBPG1APY:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Ref: RequestUnicornLambdaFunction
+      CodeSha256: PDL1aYyPzsFSJKkvswU+9rvD/s8uvWuMzdgGphQCklc=
+  UploadReceiptLambdaVersion7MTMVxpCUqixE1Ce2RtPyPcQ7uHV1O0EiHyCX6TzTeA:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Ref: UploadReceiptLambdaFunction
+      CodeSha256: PDL1aYyPzsFSJKkvswU+9rvD/s8uvWuMzdgGphQCklc=
+  SumRidesLambdaVersionjmJdXHeGOXUypmhov4CZweyyfTVnvLnq2fQui4ellRs:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Ref: SumRidesLambdaFunction
+      CodeSha256: PDL1aYyPzsFSJKkvswU+9rvD/s8uvWuMzdgGphQCklc=
+  CalcSalariesLambdaVersionkqRIPtWqgzhrOAuDq78rPeTFAp93nW6gefoxsxt4:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Ref: CalcSalariesLambdaFunction
+      CodeSha256: PDL1aYyPzsFSJKkvswU+9rvD/s8uvWuMzdgGphQCklc=
+  RecordRideLambdaVersionJazFwBWGg9OzLAjq4L2eedGUsuOfgeWcnv46BN2qkc:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName:
+        Ref: RecordRideLambdaFunction
+      CodeSha256: PDL1aYyPzsFSJKkvswU+9rvD/s8uvWuMzdgGphQCklc=
+  CalcSalariesEventsRuleSchedule1:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(4 minutes)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - CalcSalariesLambdaFunction
+              - Arn
+          Id: calcSalariesSchedule
+  CalcSalariesLambdaPermissionEventsRuleSchedule1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - CalcSalariesLambdaFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - CalcSalariesEventsRuleSchedule1
+          - Arn
+  ApiGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dev-lumigo-workshop-tonychoucc
+      EndpointConfiguration:
+        Types:
+          - EDGE
+      Policy: ""
+  ApiGatewayResourceRide:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - ApiGatewayRestApi
+          - RootResourceId
+      PathPart: ride
+      RestApiId:
+        Ref: ApiGatewayRestApi
+  ApiGatewayMethodRideOptions:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+          ResponseModels: {}
+      RequestParameters: {}
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: "{statusCode:200}"
+        ContentHandling: CONVERT_TO_TEXT
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+            ResponseTemplates:
+              application/json: ""
+      ResourceId:
+        Ref: ApiGatewayResourceRide
+      RestApiId:
+        Ref: ApiGatewayRestApi
+  ApiGatewayMethodRidePost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      RequestParameters: {}
+      ResourceId:
+        Ref: ApiGatewayResourceRide
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      ApiKeyRequired: false
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId:
+        Ref: CognitoAuthorizerApiGatewayAuthorizer
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - ":lambda:path/2015-03-31/functions/"
+              - Fn::GetAtt:
+                  - RequestUnicornLambdaFunction
+                  - Arn
+              - "/invocations"
+      MethodResponses: []
+    DependsOn:
+      - CognitoAuthorizerApiGatewayAuthorizer
+  CognitoAuthorizerApiGatewayAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      AuthorizerResultTtlInSeconds: 300
+      IdentitySource: method.request.header.Authorization
+      Name: CognitoAuthorizer
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - Fn::GetAtt:
+            - UserPool
+            - Arn
+  ApiGatewayDeployment1712749001851:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      StageName: dev
+    DependsOn:
+      - ApiGatewayMethodRideOptions
+      - ApiGatewayMethodRidePost
+  RequestUnicornLambdaPermissionApiGateway:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - RequestUnicornLambdaFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: ApiGatewayRestApi
+            - "/*/*"
+  UploadReceiptSnsSubscriptionLumigoworkshoptonychouccdevunicornDispatched:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn:
+        Ref: UnicornDispatched
+      Protocol: lambda
+      Endpoint:
+        Fn::GetAtt:
+          - UploadReceiptLambdaFunction
+          - Arn
+  UploadReceiptLambdaPermissionLumigoworkshoptonychouccdevunicornDispatchedSNS:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - UploadReceiptLambdaFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: UnicornDispatched
+  RecordRideSnsSubscriptionLumigoworkshoptonychouccdevunicornDispatched:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn:
+        Ref: UnicornDispatched
+      Protocol: lambda
+      Endpoint:
+        Fn::GetAtt:
+          - RecordRideLambdaFunction
+          - Arn
+  RecordRideLambdaPermissionLumigoworkshoptonychouccdevunicornDispatchedSNS:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - RecordRideLambdaFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: UnicornDispatched
+  SumRidesEventSourceMappingDynamodbRides:
+    Type: AWS::Lambda::EventSourceMapping
+    DependsOn: SumRidesIamRoleLambdaExecution
+    Properties:
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn:
+        Fn::GetAtt:
+          - Rides
+          - StreamArn
+      FunctionName:
+        Fn::GetAtt:
+          - SumRidesLambdaFunction
+          - Arn
+      StartingPosition: TRIM_HORIZON
+  RequestUnicornIamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev-requestUnicorn:*:*
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  Ref: UnicornDispatched
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource:
+                  Fn::GetAtt:
+                    - OccupiedUnicorns
+                    - Arn
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - requestUnicorn
+            - Ref: AWS::Region
+      ManagedPolicyArns: []
+  UploadReceiptIamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev-uploadReceipt:*:*
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectTagging
+                Resource:
+                  - Fn::GetAtt:
+                      - RideReceipts
+                      - Arn
+                  - Fn::Sub: "${RideReceipts.Arn}/*"
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - uploadReceipt
+            - Ref: AWS::Region
+      ManagedPolicyArns: []
+  SumRidesIamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev-sumRides:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:DescribeStream
+                  - dynamodb:ListStreams
+                Resource:
+                  - Fn::GetAtt:
+                      - Rides
+                      - StreamArn
+              - Effect: Allow
+                Action:
+                  - dynamodb:UpdateItem
+                Resource:
+                  Fn::GetAtt:
+                    - UnicornStats
+                    - Arn
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - sumRides
+            - Ref: AWS::Region
+            - lambdaRole
+      ManagedPolicyArns: []
+  CalcSalariesIamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev-calcSalaries:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                  - dynamodb:UpdateItem
+                Resource:
+                  Fn::GetAtt:
+                    - UnicornStats
+                    - Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectTagging
+                Resource:
+                  - Fn::GetAtt:
+                      - UnicornSalaries
+                      - Arn
+                  - Fn::Sub: "${UnicornSalaries.Arn}/*"
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - calcSalaries
+            - Ref: AWS::Region
+            - lambdaRole
+      ManagedPolicyArns: []
+  RecordRideIamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName:
+            Fn::Join:
+              - "-"
+              - - lumigo-workshop-tonychoucc
+                - dev
+                - lambda
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:PutLogEvents
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/lumigo-workshop-tonychoucc-dev-recordRide:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  Fn::GetAtt:
+                    - Rides
+                    - Arn
+      Path: "/"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - lumigo-workshop-tonychoucc
+            - dev
+            - recordRide
+            - Ref: AWS::Region
+            - lambdaRole
+      ManagedPolicyArns: []
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AliasAttributes:
+        - email
+        - preferred_username
+      AutoVerifiedAttributes:
+        - email
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+  Rides:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: RideId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: RideId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  OccupiedUnicorns:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: UnicornName
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: UnicornName
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TimeToLiveSpecification:
+        AttributeName: Expiration
+        Enabled: true
+  UnicornStats:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: Name
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: Name
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  UnicornDispatched:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: lumigo-workshop-tonychoucc-dev-unicornDispatched
+  RideReceipts:
+    Type: AWS::S3::Bucket
+  UnicornSalaries:
+    Type: AWS::S3::Bucket
+  FrontEndBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: lumigo-workshop-tonychoucc-dev.us-east-1.frontend
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+Outputs:
+  ServerlessDeploymentBucketName:
+    Value:
+      Ref: ServerlessDeploymentBucket
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-ServerlessDeploymentBucketName
+  RequestUnicornLambdaFunctionQualifiedArn:
+    Description: Current Lambda function version
+    Value:
+      Ref: RequestUnicornLambdaVersionA2o3Er2k5OeazSkB5B9EhYdtvRkczFZ7i6WBPG1APY
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-RequestUnicornLambdaFunctionQualifiedArn
+  UploadReceiptLambdaFunctionQualifiedArn:
+    Description: Current Lambda function version
+    Value:
+      Ref: UploadReceiptLambdaVersion7MTMVxpCUqixE1Ce2RtPyPcQ7uHV1O0EiHyCX6TzTeA
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-UploadReceiptLambdaFunctionQualifiedArn
+  SumRidesLambdaFunctionQualifiedArn:
+    Description: Current Lambda function version
+    Value:
+      Ref: SumRidesLambdaVersionjmJdXHeGOXUypmhov4CZweyyfTVnvLnq2fQui4ellRs
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-SumRidesLambdaFunctionQualifiedArn
+  CalcSalariesLambdaFunctionQualifiedArn:
+    Description: Current Lambda function version
+    Value:
+      Ref: CalcSalariesLambdaVersionkqRIPtWqgzhrOAuDq78rPeTFAp93nW6gefoxsxt4
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-CalcSalariesLambdaFunctionQualifiedArn
+  RecordRideLambdaFunctionQualifiedArn:
+    Description: Current Lambda function version
+    Value:
+      Ref: RecordRideLambdaVersionJazFwBWGg9OzLAjq4L2eedGUsuOfgeWcnv46BN2qkc
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-RecordRideLambdaFunctionQualifiedArn
+  ServiceEndpoint:
+    Description: URL of the service endpoint
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: ApiGatewayRestApi
+          - ".execute-api."
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - "/dev"
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-ServiceEndpoint
+  UserPoolId:
+    Value:
+      Ref: UserPool
+  UserPoolArn:
+    Value:
+      Fn::GetAtt:
+        - UserPool
+        - Arn
+  UserPoolClientId:
+    Value:
+      Ref: UserPoolClient
+  AwsRegion:
+    Value:
+      Ref: AWS::Region
+  ApiUrl:
+    Value:
+      Fn::Sub: https://${ApiGatewayRestApi}.execute-api.us-east-1.amazonaws.com/dev

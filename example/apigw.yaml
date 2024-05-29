@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Template Api Gateway."
+Transform: AWS::Serverless-2016–10–31
+
+Parameters:
+  EnvironmentName:
+    Description: Environment name for the application - [dev/staging/production]
+    Type: String
+    AllowedValues:
+      - dev
+      - staging
+      - production
+  ApiGatewayName:
+    Type: String
+  CorsAllowOrigins:
+    Type: String
+    Description: Comma seperated list of origins from where API calls are allowed
+  DomainName:
+    Type: String
+  CertificateArn:
+    Type: String
+  Route53HostedZoneId:
+    Type: String
+  JwtIssuer:
+    Type: String
+  FrontendAppClientId:
+    Type: String
+
+Conditions:
+  DomainNotEmpty: !Not [!Equals [!Ref DomainName, ""]]
+
+#
+Resources:
+  ApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${EnvironmentName}-${ApiGatewayName}
+      ProtocolType: HTTP
+      Version: "0.1"
+      CorsConfiguration:
+      AllowCredentials: true
+      AllowHeaders:
+        - "*"
+      AllowMethods:
+        - OPTIONS
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+      AllowOrigins: !Split [",", !Ref CorsAllowOrigins]
+      MaxAge: 0
+
+  RestApiAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref ApiGateway
+      AuthorizerType: JWT
+      IdentitySource:
+        - "$request.header.Authorization"
+      JwtConfiguration:
+        Issuer: !Ref JwtIssuer
+      Name: JwtAuthorizer
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/API-Gateway/${AWS::StackName}/access-logs"
+      RetentionInDays: 7
+
+  ApiStage:
+    Type: "AWS::ApiGatewayV2::Stage"
+    Properties:
+      StageName: !Ref EnvironmentName
+      AutoDeploy: true
+      ApiId: !Ref ApiGateway
+      AccessLogSettings:
+        DestinationArn:
+          Fn::GetAtt: [ApiLogGroup, Arn]
+
+  RouterDomainName:
+    Type: "AWS::ApiGatewayV2::DomainName"
+    Condition: DomainNotEmpty
+    Properties:
+      DomainName: !Ref DomainName
+      DomainNameConfigurations:
+        - EndpointType: REGIONAL
+      CertificateArn: !Ref CertificateArn
+      CertificateName: !Ref DomainName
+
+  ApiMapping:
+    Type: "AWS::ApiGatewayV2::ApiMapping"
+    Condition: DomainNotEmpty
+    Properties:
+      DomainName: !Ref RouterDomainName
+      ApiId: !Ref ApiGateway
+      Stage: !Ref ApiStage
+
+  DNSRecordSet:
+  Type: AWS::Route53::RecordSet
+  Condition: DomainNotEmpty
+  Properties:
+    HostedZoneId: !Ref Route53HostedZoneId
+    Type: A
+    Name: !Ref DomainName
+    AliasTarget:
+      DNSName:
+        Fn::GetAtt: RouterDomainName.RegionalDomainName
+      HostedZoneId:
+        Fn::GetAtt: RouterDomainName.RegionalHostedZoneId
+
+Outputs:
+  Region:
+    Description: "Region"
+    Value: !Ref AWS::Region
+
+  ApiGatewayLogGroup:
+    Description: "Api Gateway Log Group"
+    Value:
+      Fn::GetAtt: [ApiLogGroup, Arn]
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayLogGroup"
+
+  ApiGatewayEndpoint:
+    Description: "Api Gateway Endpoint"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayEndpoint"
+
+  ApiGatewayId:
+    Description: "Api Gateway ID"
+    Value: !Ref ApiGateway
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayId"
+
+  ApiGatewayJWTAuthorizer:
+    Description: "Api Gateway JWT Authorizer"
+    Value: !Ref RestApiAuthorizer
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayJWTAuthorizer"

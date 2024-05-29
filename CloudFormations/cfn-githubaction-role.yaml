@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 
 
 Description: >
-  Create role required by Github OIDC IdP to allow Github Actions to deploy to AWS used by Github Project
+  Github OIDC IdP to allow Github Actions to access AWS used by Github Project
 
 
 Parameters:
@@ -19,11 +19,11 @@ Parameters:
   GithubRepo:
     Description: GitHub Repository
     Type: String
-    Default: lab-action-aws
+    Default: oreilly-py-devops
   GithubBranch:
     Description: GitHub Branch
     Type: String
-    Default: master
+    Default: main
 
 
 Metadata:
@@ -42,7 +42,7 @@ Resources:
   GithubActionEcsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: GithubActionEcsExecutionRole
+      RoleName: cfn-GithubActionEcsExecutionRole
       Description: Execution Role for GitHub Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -56,7 +56,7 @@ Resources:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
               StringLike:
-                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/master"
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GithubAccountOrg}/${GithubRepo}:ref:refs/heads/${GithubBranch}"
           - Effect: Allow
             Principal:
               Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
@@ -72,12 +72,10 @@ Resources:
           Value: "YOUR_GITHUB_TEAM"
         - Key: "Usage-Github-Repo"
           Value: "YOUR_GITHUB_REPO"
-        - Key: "Target-Reource"
-          Value: "ECS and ECR"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-        - !Sub "arn:aws:iam::${AWS::AccountId}:policy/ECR_PushImage"
+        - "arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess"
 
   GithubIdP:
     Type: AWS::IAM::OIDCProvider

@@ -1,0 +1,138 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: The AWS CloudFormation template for this Serverless application
+
+Resources:
+  ApiGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dev-lumigo-workshop-tonychoucc
+      EndpointConfiguration:
+        Types:
+          - EDGE
+      Policy: ""
+  ApiGatewayDeployment1712749001851:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      StageName: dev
+    DependsOn:
+      - ApiGatewayMethodRideOptions
+      - ApiGatewayMethodRidePost
+  ApiGatewayMethodRidePost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      RequestParameters: {}
+      ResourceId:
+        Ref: ApiGatewayResourceRide
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      ApiKeyRequired: false
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId:
+        Ref: CognitoAuthorizerApiGatewayAuthorizer
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - ":lambda:path/2015-03-31/functions/"
+              - Fn::GetAtt:
+                  - RequestUnicornLambdaFunction
+                  - Arn
+              - "/invocations"
+      MethodResponses: []
+    DependsOn:
+      - CognitoAuthorizerApiGatewayAuthorizer
+  CognitoAuthorizerApiGatewayAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      AuthorizerResultTtlInSeconds: 300
+      IdentitySource: method.request.header.Authorization
+      Name: CognitoAuthorizer
+      RestApiId:
+        Ref: ApiGatewayRestApi
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+        - Fn::GetAtt:
+            - UserPool
+            - Arn
+  RequestUnicornLambdaPermissionApiGateway:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - RequestUnicornLambdaFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: ApiGatewayRestApi
+            - "/*/*"
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AliasAttributes:
+        - email
+        - preferred_username
+      AutoVerifiedAttributes:
+        - email
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+Outputs:
+
+  ServiceEndpoint:
+    Description: URL of the service endpoint
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: ApiGatewayRestApi
+          - ".execute-api."
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - "/dev"
+    Export:
+      Name: sls-lumigo-workshop-tonychoucc-dev-ServiceEndpoint
+  UserPoolId:
+    Value:
+      Ref: UserPool
+  UserPoolArn:
+    Value:
+      Fn::GetAtt:
+        - UserPool
+        - Arn
+  UserPoolClientId:
+    Value:
+      Ref: UserPoolClient
+  AwsRegion:
+    Value:
+      Ref: AWS::Region
