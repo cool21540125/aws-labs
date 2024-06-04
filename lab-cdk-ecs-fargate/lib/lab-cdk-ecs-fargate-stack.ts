@@ -127,9 +127,19 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
 
 
     // Listenr + register TG
-    const alb_listener = flask_ecs_alb.addListener("alb_listener", {
+    const alb_listener = flask_ecs_alb.addListener("alb_listener", { // listener + default rule
       port: 80,
-      defaultTargetGroups: [flask_ecs_tg],
+      defaultAction: elbv2.ListenerAction.fixedResponse(200, {
+        contentType: "text/plain",
+        messageBody: "OK",
+      }),
+    });
+    alb_listener.addAction("flask_ecs_tg", {  // listener rule
+      action: elbv2.ListenerAction.forward([flask_ecs_tg]),
+      priority: 100,
+      conditions: [
+        elbv2.ListenerCondition.hostHeaders(["flask.tonychoucc.com"]),
+      ],
     });
 
 
