@@ -13,123 +13,123 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
     super(scope, id, props);
 
     // ECR
-    const ecrForLineBotFlaskApp = new ecr.Repository(this, "ecrForLineBotFlaskApp", {
-      repositoryName: "ecr-for-linebot-flask-app",
+    const cdk_ecr_flask_repo = new ecr.Repository(this, "cdk_ecr_flask_repo", {
+      repositoryName: "flask-app",
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    cdk.Tags.of(ecrForLineBotFlaskApp).add("Name", "ecrForLineBotFlaskApp");
-    cdk.Tags.of(ecrForLineBotFlaskApp).add("Usage", "devopstest");
+    cdk.Tags.of(cdk_ecr_flask_repo).add("Name", "flask-app");
+    cdk.Tags.of(cdk_ecr_flask_repo).add("Usage", "devopstest");
 
 
     // VPC
-    const vpcForLineBotEcs = new ec2.Vpc(this, 'vpcForLineBotEcs', {
-      vpcName: "vpcForLineBotEcs",
+    const cdk_flask_vpc = new ec2.Vpc(this, 'cdk_flask_vpc', {
+      vpcName: "cdk_flask_vpc",
       maxAzs: 2,
       natGateways: 0,
     });
-    cdk.Tags.of(vpcForLineBotEcs).add("Name", "vpcForLineBotEcs");
-    cdk.Tags.of(vpcForLineBotEcs).add("Usage", "devopstest");
+    cdk.Tags.of(cdk_flask_vpc).add("Name", "cdk_flask_vpc");
+    cdk.Tags.of(cdk_flask_vpc).add("Usage", "devopstest");
 
 
     // ECS Cluster
-    const ecsClusterForLineBot = new ecs.Cluster(this, "ecsClusterForLineBot", {
-      clusterName: "ecsClusterForLineBot",
-      vpc: vpcForLineBotEcs,
+    const cdk_flask_ecs_cluster = new ecs.Cluster(this, "cdk_flask_ecs_cluster", {
+      clusterName: "cdk_flask_ecs_cluster",
+      vpc: cdk_flask_vpc,
     });
-    cdk.Tags.of(ecsClusterForLineBot).add("Name", "ecsClusterForLineBot");
-    cdk.Tags.of(ecsClusterForLineBot).add("Usage", "devopstest");
+    cdk.Tags.of(cdk_flask_ecs_cluster).add("Name", "cdk_flask_ecs_cluster");
+    cdk.Tags.of(cdk_flask_ecs_cluster).add("Usage", "devopstest");
 
 
     // ECS Task Execution Role for task-definition.json
-    const ecsTaskExecutionRole = new iam.Role(this, "ecsTaskExecutionRole", {
-      roleName: "ecsTaskExecutionRole",
+    const cdk_ecs_task_execution_role = new iam.Role(this, "cdk_ecs_task_execution_role", {
+      roleName: "cdk_ecs_task_execution_role",
       assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonECSTaskExecutionRolePolicy"),
       ],
     });
-    cdk.Tags.of(ecsTaskExecutionRole).add("Name", "ecsTaskExecutionRole");
-    cdk.Tags.of(ecsTaskExecutionRole).add("Usage", "devopstest");
+    cdk.Tags.of(cdk_ecs_task_execution_role).add("Name", "cdk_ecs_task_execution_role");
+    cdk.Tags.of(cdk_ecs_task_execution_role).add("Usage", "devopstest");
 
 
     // Task Definition
-    const taskDefLineBotFlask = new ecs.FargateTaskDefinition(this, "taskDefLineBotFlask", {
-      family: "taskDefLineBotFlask",
-      cpu: 1024,
-      memoryLimitMiB: 2048,
-      executionRole: ecsTaskExecutionRole,
+    const cdk_flask_task_definition = new ecs.FargateTaskDefinition(this, "cdk_flask_task_definition", {
+      family: "cdk_flask_task_definition",
+      cpu: 256,
+      memoryLimitMiB: 512,
+      executionRole: cdk_ecs_task_execution_role,
     });
-    cdk.Tags.of(taskDefLineBotFlask).add("Name", "taskDefLineBotFlask");
-    cdk.Tags.of(taskDefLineBotFlask).add("Usage", "devopstest");
+    cdk.Tags.of(cdk_flask_task_definition).add("Name", "cdk_flask_task_definition");
+    cdk.Tags.of(cdk_flask_task_definition).add("Usage", "devopstest");
 
     // Task Definition - Container
-    const ecsContainer = taskDefLineBotFlask.addContainer("web-api", {
+    const cdk_ecs_container = cdk_flask_task_definition.addContainer("web-api", {
       containerName: "web-api",
-      image: ecs.ContainerImage.fromRegistry(ecrForLineBotFlaskApp.repositoryUri),
+      image: ecs.ContainerImage.fromRegistry(cdk_ecr_flask_repo.repositoryUri),
       logging: ecs.LogDrivers.awsLogs({ 
         streamPrefix: "/logEcs",
         logRetention: 3,
       }),
       essential: true,
-      cpu: 1024,
+      cpu: 256,
       environment: {
         "FLASK_PORT": "5000",
       },
     });
-    ecsContainer.addPortMappings({
+    cdk_ecs_container.addPortMappings({
       containerPort: 5000,
       hostPort: 5000,
-      name: "fargate-port-mapping-to-flask-app",
+      name: "cdk-fargate-port-mapping-to-flask",
     });
 
 
     // SG - ALB
-    const albSGLineBot = new ec2.SecurityGroup(this, "albSGLineBot", {
-      vpc: vpcForLineBotEcs,
-      securityGroupName: "albSGLineBot",
+    const flask_alb_sg = new ec2.SecurityGroup(this, "flask_alb_sg", {
+      vpc: cdk_flask_vpc,
+      securityGroupName: "flask-alb-sg",
     });
-    cdk.Tags.of(albSGLineBot).add("Name", "albSGLineBot");
-    cdk.Tags.of(albSGLineBot).add("Usage", "devopstest");
-    albSGLineBot.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
+    cdk.Tags.of(flask_alb_sg).add("Name", "flask-alb-sg");
+    cdk.Tags.of(flask_alb_sg).add("Usage", "devopstest");
+    flask_alb_sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow 80 port");
 
 
     // SG - ECS
-    const ecsSgLineBot = new ec2.SecurityGroup(this, "ecsServiceSecurityGroupEni", {
-      vpc: vpcForLineBotEcs,
-      securityGroupName: "ecsSgLineBot",
+    const flask_ecs_sg = new ec2.SecurityGroup(this, "ecsServiceSecurityGroupEni", {
+      vpc: cdk_flask_vpc,
+      securityGroupName: "flask-ecs-sg",
     });
-    cdk.Tags.of(ecsSgLineBot).add("Name", "ecsSgLineBot");
-    cdk.Tags.of(ecsSgLineBot).add("Usage", "devopstest");
-    ecsSgLineBot.addIngressRule(albSGLineBot, ec2.Port.tcp(5000), "allow 5000 port");
+    cdk.Tags.of(flask_ecs_sg).add("Name", "flask-ecs-sg");
+    cdk.Tags.of(flask_ecs_sg).add("Usage", "devopstest");
+    flask_ecs_sg.addIngressRule(flask_alb_sg, ec2.Port.tcp(5000), "allow 5000 port");
 
 
     // ALB
-    const albToEcsFlaskBot = new elbv2.ApplicationLoadBalancer(this, "albToEcsFlaskBot", {
-      loadBalancerName: "albToEcsFlaskBot",
-      vpc: vpcForLineBotEcs,
+    const flask_ecs_alb = new elbv2.ApplicationLoadBalancer(this, "flask_ecs_alb", {
+      loadBalancerName: "flask-ecs-alb",
+      vpc: cdk_flask_vpc,
       internetFacing: true,
-      securityGroup: albSGLineBot,
+      securityGroup: flask_alb_sg,
     });
-    cdk.Tags.of(albToEcsFlaskBot).add("Name", "albToEcsFlaskBot");
-    cdk.Tags.of(albToEcsFlaskBot).add("Usage", "devopstest");
+    cdk.Tags.of(flask_ecs_alb).add("Name", "flask-ecs-alb");
+    cdk.Tags.of(flask_ecs_alb).add("Usage", "devopstest");
 
 
     // TG for ALB
-    const tgForAlbToEcs = new elbv2.ApplicationTargetGroup(this, "tgForAlbToEcs", {
-      targetGroupName: "tgForAlbToEcs",
+    const flask_ecs_tg = new elbv2.ApplicationTargetGroup(this, "flask_ecs_tg", {
+      targetGroupName: "flask-ecs-tg",
       port: 80,
       protocol: elbv2.ApplicationProtocol.HTTP,
-      vpc: vpcForLineBotEcs,
+      vpc: cdk_flask_vpc,
       targetType: elbv2.TargetType.IP,
     });
-    cdk.Tags.of(tgForAlbToEcs).add("Name", "tgForAlbToEcs");
-    cdk.Tags.of(tgForAlbToEcs).add("Usage", "devopstest");
+    cdk.Tags.of(flask_ecs_tg).add("Name", "flask-ecs-tg");
+    cdk.Tags.of(flask_ecs_tg).add("Usage", "devopstest");
 
 
     // Listenr + register TG
-    const listenerForAlb = albToEcsFlaskBot.addListener("listenerForAlb", {
+    const alb_listener = flask_ecs_alb.addListener("alb_listener", {
       port: 80,
-      defaultTargetGroups: [tgForAlbToEcs],
+      defaultTargetGroups: [flask_ecs_tg],
     });
 
 
@@ -137,26 +137,25 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
 
 
     // ECS Service
-    const ecsServiceLineBot = new ecs.FargateService(this, "ecsServiceLineBot", {
-      serviceName: "ecsServiceLineBot",
-      cluster: ecsClusterForLineBot,
-      taskDefinition: taskDefLineBotFlask,
+    const flask_ecs_service = new ecs.FargateService(this, "flask_ecs_service", {
+      serviceName: "flask_ecs_service",
+      cluster: cdk_flask_ecs_cluster,
+      taskDefinition: cdk_flask_task_definition,
       desiredCount: 1,
       assignPublicIp: true,
-      securityGroups: [ecsSgLineBot],
+      securityGroups: [flask_ecs_sg],
       healthCheckGracePeriod: cdk.Duration.seconds(10),
     });
-    cdk.Tags.of(ecsServiceLineBot).add("Name", "ecsServiceLineBot");
-    cdk.Tags.of(ecsServiceLineBot).add("Usage", "devopstest");
+    cdk.Tags.of(flask_ecs_service).add("Name", "flask_ecs_service");
+    cdk.Tags.of(flask_ecs_service).add("Usage", "devopstest");
 
-
-    // Register ECS Service to TG: tgForAlbToEcs
-    tgForAlbToEcs.addTarget(ecsServiceLineBot);
+    // Register ECS Service to TG: flask_ecs_tg
+    flask_ecs_tg.addTarget(flask_ecs_service);
 
 
     // Output
     new cdk.CfnOutput(this, "LoadBalancerDNS", {
-      value: albToEcsFlaskBot.loadBalancerDnsName,
+      value: flask_ecs_alb.loadBalancerDnsName,
     });
   }
 }
