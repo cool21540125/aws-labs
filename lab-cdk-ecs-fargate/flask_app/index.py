@@ -12,7 +12,7 @@ def index():
 
 
 def cpu_extensive_task():
-    for i in range(0, 100_000):
+    for i in range(0, 2000):
         hashlib.md5().hexdigest()
     time.sleep(0.2)
 

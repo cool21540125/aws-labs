@@ -6,6 +6,8 @@ import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 
 
 export class LabCdkEcsFargateStack extends cdk.Stack {
@@ -152,7 +154,7 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
       cluster: cdk_flask_ecs_cluster,
       taskDefinition: cdk_flask_task_definition,
       desiredCount: 1,
-      assignPublicIp: true,
+      assignPublicIp: true,  // 若要 Public Access, 一定得 true
       securityGroups: [flask_ecs_sg],
       healthCheckGracePeriod: cdk.Duration.seconds(10),
     });
@@ -165,7 +167,52 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
 
     // Output
     new cdk.CfnOutput(this, "LoadBalancerDNS", {
-      value: flask_ecs_alb.loadBalancerDnsName,
+      value: `${flask_ecs_alb.loadBalancerDnsName}`,
     });
+
+
+    // SNS Topic for notification
+    const cdk_sns_topic = new cdk.aws_sns.Topic(this, "cdk-sns-topic", {
+      topicName: "cdk-email-notification-topic",
+      fifo: false,
+    });
+    cdk_sns_topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription("tony@weibyapps.com"));
+
+
+    // CloudWatch Alarm for ECS CPU - 15%
+    const ecs_cpu15_cwa = new cloudwatch.Alarm(this, "cdk-ecs-cpu15-alarm", {
+      alarmName: `cdk-${flask_ecs_service}-CPU-15-alarm`,
+      alarmDescription: "ECS CPU Utilization",
+      actionsEnabled: true,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      threshold: 15,
+      metric: flask_ecs_service.metricCpuUtilization({
+        period: cdk.Duration.minutes(1),
+        statistic: "Maximum",
+      }),
+      evaluationPeriods: 1,
+      datapointsToAlarm: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    ecs_cpu15_cwa.addAlarmAction(new actions.SnsAction(cdk_sns_topic));
+    ecs_cpu15_cwa.addOkAction(new actions.SnsAction(cdk_sns_topic));
+
+    // CloudWatch Alarm for ECS CPU - 20%
+    const ecs_cpu20_cwa = new cloudwatch.Alarm(this, "cdk-ecs-cpu20-alarm", {
+      alarmName: `cdk-${flask_ecs_service}-CPU-20-alarm`,
+      alarmDescription: "ECS CPU Utilization",
+      actionsEnabled: true,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      threshold: 20,
+      metric: flask_ecs_service.metricCpuUtilization({
+        period: cdk.Duration.minutes(1),
+        statistic: "Maximum",
+      }),
+      evaluationPeriods: 1,
+      datapointsToAlarm: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    ecs_cpu20_cwa.addAlarmAction(new actions.SnsAction(cdk_sns_topic));
+    ecs_cpu20_cwa.addOkAction(new actions.SnsAction(cdk_sns_topic));
   }
 }
