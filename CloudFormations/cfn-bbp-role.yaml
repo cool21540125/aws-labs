@@ -1,9 +1,9 @@
-# bitbucket-oidc-and-roles-for-WonderCoreINFO
+# bitbucket-oidc-and-roles-for-demo
 AWSTemplateFormatVersion: "2010-09-09"
 
 
 Description: >
-  This template creates role and OIDC IdP for WonderCoreINFO in Bitbucket Pipeline.
+  This template creates role and OIDC IdP for demo in Bitbucket Pipeline.
 
 
 Parameters:
@@ -14,9 +14,9 @@ Parameters:
     Default: a031c46782e6e6c662c2c87c76da9aa62ccabd8e
   OidcProvider:
     Description: >
-      Bitbucket OIDC Provider of WonderCoreINFO
+      Bitbucket OIDC Provider of demo
     Type: String
-    Default: api.bitbucket.org/2.0/workspaces/WonderCore_INFO/pipelines-config/identity/oidc
+    Default: api.bitbucket.org/2.0/workspaces/demo/pipelines-config/identity/oidc
   WorkspaceUuid:
     Description: >
       Bitbucket WorkspaceUuid
@@ -28,7 +28,7 @@ Resources:
   BitbucketPipelineEcsExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: WonderCoreINFO-role-to-use-bbp-to-update-aws-resources
+      RoleName: demo-role-to-use-bbp-to-update-aws-resources
       Description: Execution Role for Bitbucket Project - Team/Repo (created by CloudFormation, DO NOT edit this role directly)
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
@@ -65,7 +65,7 @@ Resources:
             !Sub "ari:cloud:bitbucket::workspace/${WorkspaceUuid}"
       Tags:
         - Key: "Usage"
-          Value: "Bitbucket projects under WonderCoreINFO"
+          Value: "Bitbucket projects under demo"
         - Key: "Target-Reource"
           Value: "ECS and ECR"
         - Key: "CreatedBy"
@@ -81,6 +81,6 @@ Resources:
         - !Sub ari:cloud:bitbucket::workspace/${WorkspaceUuid}
       Tags:
         - Key: "Usage"
-          Value: "Bitbucket projects under WonderCoreINFO"
+          Value: "Bitbucket projects under demo"
         - Key: "CreatedBy"
           Value: "CloudFormation Template - DO NOT edit this role directly"

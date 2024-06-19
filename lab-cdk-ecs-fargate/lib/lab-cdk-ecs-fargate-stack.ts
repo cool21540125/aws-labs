@@ -176,7 +176,7 @@ export class LabCdkEcsFargateStack extends cdk.Stack {
       topicName: "cdk-email-notification-topic",
       fifo: false,
     });
-    cdk_sns_topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription("tony@weibyapps.com"));
+    cdk_sns_topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription("cool21540125@gmail.com"));
 
 
     // CloudWatch Alarm for ECS CPU - 15%
