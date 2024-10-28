@@ -16,8 +16,9 @@ infra:
 
 .PHONE: image
 image:
-	export AWS_ACCOUNT=$$(aws sts get-caller-identity --query Account --output text); \
-	export AWS_REGION=$$(aws configure get default.region); \
-	aws ecr get-login-password | docker login --username AWS --password-stdin $${AWS_ACCOUNT}.dkr.ecr.$${AWS_REGION}.amazonaws.com
-	cd flask_app && docker build -t $${AWS_ACCOUNT}.dkr.ecr.$${AWS_REGION}.amazonaws.com/flask-app .
-	docker push $${AWS_ACCOUNT}.dkr.ecr.$${AWS_REGION}.amazonaws.com/flask-app
+	export AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+	export AWS_REGION=$(aws configure get default.region)
+	aws ecr get-login-password | docker login --username AWS --password-stdin ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com
+	cd flask_app && docker build -t ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/flask-app .
+	docker push ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/flask-app
+	cd ..

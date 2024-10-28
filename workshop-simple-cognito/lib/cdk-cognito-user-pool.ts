@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 
 import * as cognito from "aws-cdk-lib/aws-cognito";
 
-export class WorkshopSimpleCognitoStack extends cdk.Stack {
+export class WorkshopSimpleCognitoUserPoolStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
