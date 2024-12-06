@@ -6,21 +6,26 @@ import time
 app = Flask(__name__)
 
 
-@app.route("/")
-def index():
-    return "Hello, World!"
-
-
-def cpu_extensive_task():
+def _cpu_extensive_task():
     for i in range(0, 2000):
         hashlib.md5().hexdigest()
     time.sleep(0.2)
 
 
-@app.route("/redirect")
+@app.route("/")
+def index():
+    return "index"
+
+
+@app.route("/godie")
 def redirect():
-    threading.Thread(target=cpu_extensive_task).start()
+    threading.Thread(target=_cpu_extensive_task).start()
     return render_template("redirect.html")
+
+
+@app.route("/check")
+def check():
+    return {"check": "ok"}
 
 
 if __name__ == "__main__":

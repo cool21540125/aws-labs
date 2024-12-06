@@ -1,24 +1,31 @@
 
-# AWS_ACCOUNT := $(shell aws sts get-caller-identity --query Account --output text)
-# AWS_REGION := $(shell aws configure get default.region)
+AWS_ACCOUNT := $(shell aws sts get-caller-identity --query Account --output text)
+AWS_REGION := $(shell aws configure get default.region)
 
+.PHONY: init infra image service all-start
 
-.PHONY: init
 init:
-	$(info ***** Remember to comment ECS Part *****)
-	exit 0
+	yarn install
 
-
-.PHONY: infra
 infra:
-	cdk deploy --require-approval never
+	cdk deploy --require-approval never LabCdkEcsFargateInfra
 
-
-.PHONE: image
 image:
-	export AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-	export AWS_REGION=$(aws configure get default.region)
 	aws ecr get-login-password | docker login --username AWS --password-stdin ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com
-	cd flask_app && docker build -t ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/flask-app .
-	docker push ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/flask-app
+	cd flask_app && docker build -t ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/sre-poc-flask-app .
+	docker push ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/sre-poc-flask-app
 	cd ..
+
+service:
+	cdk deploy --require-approval never LabCdkEcsFargateService
+
+all-start:
+	$(MAKE) init
+	$(MAKE) infra
+	$(MAKE) image
+	$(MAKE) service
+
+delete-all:
+	cdk destroy --force LabCdkEcsFargateService
+	aws ecr batch-delete-image --repository-name sre-poc-flask-app --image-ids imageTag=latest
+	cdk destroy --force LabCdkEcsFargateInfra
