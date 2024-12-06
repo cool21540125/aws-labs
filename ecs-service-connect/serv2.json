@@ -1,0 +1,36 @@
+{
+  "cluster": "poc-ecs-sc",
+  "launchType": "FARGATE",
+  "desiredCount": 1,
+  "enableECSManagedTags": true,
+  "enableExecuteCommand": true,
+  "propagateTags": "SERVICE",
+  "serviceName": "app2",
+  "taskDefinition": "app",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "assignPublicIp": "DISABLED",
+      "securityGroups": [
+        "sg-12345678"
+      ],
+      "subnets": [
+        "subnet-12345678",
+        "subnet-22345678"
+      ]
+    }
+  },
+  "serviceConnectConfiguration": {
+    "enabled": true,
+    "services": [
+      {
+        "portName": "app",
+        "discoveryName": "app2",
+        "clientAliases": [
+          {
+            "port": 4567
+          }
+        ]
+      }
+    ]
+  }
+}

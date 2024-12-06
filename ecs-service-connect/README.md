@@ -1,0 +1,4 @@
+- Task Definition (json file) 裡頭的
+  - `portName` : Service Connect 使用
+  - `discoveryName` : (預設同 portName) 此為 CloudMap Service Name
+-
