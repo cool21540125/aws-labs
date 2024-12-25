@@ -17,7 +17,7 @@ image:
 	cd ..
 
 service:
-	cdk deploy --require-approval never LabCdkEcsFargateService
+	cdk deploy --require-approval never LabCdkEcsFargateService -vv
 
 all-start:
 	$(MAKE) init

@@ -34,6 +34,24 @@ export class LabCdkEcsFargateInfra extends cdk.Stack {
     cdk.Tags.of(sre_poc_vpc).add("Name", "sre_poc_vpc");
     cdk.Tags.of(sre_poc_vpc).add("SreNote", "SrePocTest");
 
+    // // VPC Endpoint for private ECS - ECR (但好麻煩= = 因為要建 3 個: dkr / ecr / s3) 放棄了~
+    // new ec2.InterfaceVpcEndpoint(this, "sre_poc_vpce", {
+    //   vpc: sre_poc_vpc,
+    //   subnets: {
+    //     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+    //     availabilityZones: ["us-west-2a", "us-west-2b"]
+    //   },
+    //   service: new ec2.InterfaceVpcEndpointService("")
+    // });
+
+    // subnets
+    const subnets = sre_poc_vpc.privateSubnets;
+    const Subnets = sre_poc_vpc.publicSubnets;
+    console.log("--------------- subnets ---------------");
+    console.log(subnets);
+    console.log(Subnets);
+    console.log("=============== subnets ===============");
+
     // ECS Cluster
     const sre_poc_cluster = new ecs.Cluster(this, "sre_poc_cluster", {
       clusterName: "sre_poc_cluster",
@@ -69,6 +87,10 @@ export class LabCdkEcsFargateInfra extends cdk.Stack {
         family: "sre_poc_taskdef",
         cpu: 256,
         memoryLimitMiB: 512,
+        runtimePlatform: {
+          // cpuArchitecture: ecs.CpuArchitecture.ARM64  // FIXME: 似乎還有些地方沒弄好, 導致 container 啟用失敗
+          cpuArchitecture: ecs.CpuArchitecture.X86_64
+        },
         executionRole: sre_poc_ecs_task_execution_role
       }
     );
