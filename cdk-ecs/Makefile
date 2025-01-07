@@ -2,7 +2,7 @@
 AWS_ACCOUNT := $(shell aws sts get-caller-identity --query Account --output text)
 AWS_REGION := $(shell aws configure get default.region)
 
-.PHONY: init infra image service all-start
+.PHONY: init infra image update all-start
 
 init:
 	yarn install
@@ -16,14 +16,14 @@ image:
 	docker push ${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/sre-poc-flask-app
 	cd ..
 
-service:
+update:
 	cdk deploy --require-approval never LabCdkEcsFargateService -vv
 
 all-start:
 	$(MAKE) init
 	$(MAKE) infra
 	$(MAKE) image
-	$(MAKE) service
+	$(MAKE) update
 
 delete-all:
 	cdk destroy --force LabCdkEcsFargateService
