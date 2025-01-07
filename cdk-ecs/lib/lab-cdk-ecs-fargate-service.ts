@@ -31,7 +31,10 @@ export class LabCdkEcsFargateService extends cdk.Stack {
       securityGroups: [props.ecs_sg],
       healthCheckGracePeriod: cdk.Duration.seconds(10),
       enableECSManagedTags: true,
-      enableExecuteCommand: true
+      enableExecuteCommand: true,
+      circuitBreaker: {
+        rollback: true
+      }
     });
     cdk.Tags.of(poc_ecs_service).add("Name", "poc_ecs_service");
     cdk.Tags.of(poc_ecs_service).add("Usage", "devopstest");
