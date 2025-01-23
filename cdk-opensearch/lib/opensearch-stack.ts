@@ -67,8 +67,8 @@ export class OpensearchStack extends cdk.Stack {
         // Dedicated Master Node
         masterNodes: 0,
         dataNodes: 1,
-        dataNodeInstanceType: "m7g.large.search",
-        // dataNodeInstanceType: "t3.small.search",
+        // dataNodeInstanceType: "m7g.large.search",
+        dataNodeInstanceType: "t3.small.search",
         multiAzWithStandbyEnabled: false,
         warmNodes: 0
       },
