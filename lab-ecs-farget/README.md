@@ -1,16 +1,14 @@
-
 - 2023/03/28
 - [ECS Farget](https://catalog.us-east-1.prod.workshops.aws/workshops/4b59b9fb-48b6-461c-9377-907b2e33c9df/en-US/prerequisites/software)
 - deploy Blue/Green Pipeline ECS on:
-    - EC2
-    - Farget
-
+  - EC2
+  - Farget
 
 ```bash
 ### 處理好底下 env
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_REGION=us-east-1
-export AWS_ACCOUNT_ID=668363134003
+export AWS_ACCOUNT_ID=123456789012
 echo $JAVA_HOME
 
 
