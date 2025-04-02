@@ -40,9 +40,9 @@ Resources:
   MyTriggeredLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
+      CodeUri: src/apigw-http-api-eventbridge_api/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Events:
         EventBridgeTrigger:
           Type: CloudWatchEvent

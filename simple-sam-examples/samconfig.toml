@@ -15,7 +15,8 @@ lint = true
 [default.deploy.parameters]
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-resolve_s3 = true
+resolve_s3 = false
+s3_bucket = "sre-demo-test-simple-sam-examples2025"
 
 [default.package.parameters]
 resolve_s3 = true
