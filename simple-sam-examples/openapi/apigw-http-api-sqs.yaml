@@ -9,12 +9,19 @@ paths:
         default:
           description: "Response for POST /"
       x-amazon-apigateway-integration:
+        # http or http_proxy 用來整合 backend
+        # aws_proxy 用來整合 LambdaFn
+        # aws 用來整合其他 AWS Resources
+        # mock 僅 ApiGateway 做 mock 測試
         type: "aws_proxy"
-        integrationSubtype: "SQS-SendMessage"  # 此 Endpoint 後端會去觸發 SQS
-        credentials:
+        # 此 Endpoint 後端會去觸發 SQS (僅適用於 HTTP api)
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html
+        integrationSubtype: "SQS-SendMessage"
+        credentials:  # ApiGw 調用 backend 的 Role
           Fn::GetAtt: [MyHttpApiRole, Arn]
-        connectionType: "INTERNET"
+        connectionType: "INTERNET"  # VPC_LINK 或 INTERNET
         payloadFormatVersion: "1.0"
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services.html
         requestParameters:
           MessageBody: "$request.body"
           QueueUrl:

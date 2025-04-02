@@ -1,37 +1,39 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: API Gateway HTTP API to EventBridge (uksb-1tthgi812) (tag:apigw-http-api-eventbridge)
+Description: API Gateway HTTP API to EventBridge (uksb-1tthgi812)
+  (tag:apigw-http-api-eventbridge)
 
 Resources:
 
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      DefinitionBody:  # OpenAPI, (也可用 DefinitionUri)
+      DefinitionBody:
+        # OpenAPI, (也可用 DefinitionUri)
         'Fn::Transform':
-          Name: 'AWS::Include'
+          Name: AWS::Include
           Parameters:
-            Location: 'openapi/apigw-http-api-eventbridge_api.yaml'
+            Location: openapi/apigw-http-api-eventbridge_api.yaml
 
   # Role for ApiGw -> EventBridge
   MyHttpApiRole:
-    Type: "AWS::IAM::Role"  # 建立一個 Role, 允許 apigw 使用來觸發 default event bus 做 PutEvents
+    Type: AWS::IAM::Role # 建立一個 Role, 允許 apigw 使用來觸發 default event bus 做 PutEvents
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: Allow
             Principal:
-              Service: "apigateway.amazonaws.com"
-            Action: 
-              - "sts:AssumeRole"
+              Service: apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Policies:
-        - PolicyName: ApiDirectWriteEventBridge  # Lambda 的 Resource-based policy (非 Execution Role)
+        - PolicyName: ApiDirectWriteEventBridge # Lambda 的 Resource-based policy (非 Execution Role)
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               Action:
-              - events:PutEvents
+                - events:PutEvents
               Effect: Allow
               Resource:
                 - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default
@@ -50,9 +52,9 @@ Resources:
             # EventBusName: default
             Pattern:
               source:
-                - "WebApp"  # 任何發送到 default Bridge 的 Events, 凡事符合了 {"source": "WebApp"} 都會調用 Function
+                - WebApp # 任何發送到 default Bridge 的 Events, 凡事符合了 {"source": "WebApp"} 都會調用 Function
 
 Outputs:
   ApiEndpoint:
-    Description: "HTTP API endpoint URL"
-    Value: !Sub "https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Description: HTTP API endpoint URL
+    Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com
