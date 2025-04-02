@@ -8,7 +8,7 @@ paths:
         default:
           description: "EventBridge response"
       x-amazon-apigateway-integration:
-        integrationSubtype: "EventBridge-PutEvents"
+        integrationSubtype: "EventBridge-PutEvents"  # 此 Endpoint 後端會去觸發 EventBridge
         credentials:
           Fn::GetAtt: [MyHttpApiRole, Arn]
         requestParameters:

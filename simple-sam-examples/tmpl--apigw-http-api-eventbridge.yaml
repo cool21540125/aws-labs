@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: API Gateway HTTP API to EventBridge (uksb-1tthgi812) (tag:apigw-http-api-eventbridge)
 
 Resources:
-  # HTTP API Gateway
+
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -11,7 +11,7 @@ Resources:
         'Fn::Transform':
           Name: 'AWS::Include'
           Parameters:
-            Location: './tmpl--apigw-http-api-eventbridge_api.yaml'
+            Location: 'openapi/apigw-http-api-eventbridge_api.yaml'
 
   # Role for ApiGw -> EventBridge
   MyHttpApiRole:

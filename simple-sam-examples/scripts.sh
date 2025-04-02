@@ -2,7 +2,7 @@
 exit 0
 # ---------------------------------------------------------------------------
 
-### ====================== HTTP Api Gateway 觸發 EventBridge, 是情況 invoke Function ======================
+### ====================== HTTP Api Gateway 觸發 EventBridge, 視情況 invoke Function ======================
 sam deploy -t tmpl--apigw-http-api-eventbridge.yaml
 
 API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue")
@@ -17,3 +17,6 @@ aws events put-events \
   --entries '[{"Source": "WebApp", "DetailType": "OrderPlaced", "Detail": "{\"orderId\":\"9876\"}"}]'
 
 sam delete
+
+### ====================== HTTP Api Gateway 觸發 SQS, invoke Function ======================
+sam deploy -t tmpl--apigw-http-api-sqs.yaml --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-kpm24cyczz9k
