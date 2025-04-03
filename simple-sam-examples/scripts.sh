@@ -61,3 +61,34 @@ example_apigw_lambda_ses() {
 
   sam delete
 }
+
+### ====================== Rest Api Gateway + Usage Plan ======================
+# https://serverlessland.com/patterns/apigw-api-key-sam
+# https://github.com/aws-samples/serverless-patterns/tree/main/apigw-api-key
+
+example_apigw_usage_plan() {
+  sam deploy -t tmpl__apigw-rest-api-usage-plan.yaml
+
+  API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='AppApiEndpoint'].OutputValue")
+  echo $API_ENDPOINT
+
+  curl --location --request GET $API_ENDPOINT/Prod/
+  #{"message":"Missing Authentication Token"}%
+
+  API_KEY_ID=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='ApiKeyId'].OutputValue")
+  USAGE_PLAN_ID=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='UsagePlanId'].OutputValue")
+  USAGE_PLAN_API_KEY=$(aws apigateway get-usage-plan-key --usage-plan-id $USAGE_PLAN_ID --key-id $API_KEY_ID | yq '.value')
+
+  # 拿 ApiKey 調用 RestApiGw
+  curl -H "x-api-key:$USAGE_PLAN_API_KEY" $API_ENDPOINT | jq
+
+  sam delete
+}
+
+### ======================  ======================
+# https://serverlessland.com/patterns/apigw-cognito-authorizer-sam-nodejs
+# https://github.com/aws-samples/serverless-patterns/tree/main/cognito-restapi
+
+example_apigw_cognito_auth() {
+  sam deploy -t tmpl__apigw-rest-api-cognito.yaml
+}

@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless patterns - Amazon API Gateway REST API with Cognito User Pools Authorizer (uksb-1tthgi812) (tag:cognito-restapi)
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    CodeUri: src/
+
+Resources:
+  AppApi:  # Rest Api Gateway
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: cognito-restapi
+      Description: Cognito User Pools Authorizer REST API demo
+
+  RootMethodGet:  # Rest Api (with CUP authorizer) - GET /
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref AppApi
+      ResourceId: !GetAtt AppApi.RootResourceId
+      HttpMethod: GET
+      AuthorizationType: None
+      # AuthorizationType: COGNITO_USER_POOLS
+      # AuthorizerId: !Ref AuthorizersCognitoUserPools
+      Integration:
+        Type: AWS_PROXY  # AWS | AWS_PROXY | HTTP | HTTP_PROXY | MOCK . 目前情境為 Lambda proxy integration
+        IntegrationHttpMethod: POST
+        Uri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt AppFunction.Arn, '/invocations']]
+
+  # AuthorizersCognitoUserPools:  # ApiGw 的 CUP Authorizer
+  #   Type: AWS::ApiGateway::Authorizer
+  #   Properties:
+  #     Name: CognitoAuthorizer
+  #     # TOKEN: 使用 custom Header 的 single authorization token
+  #     # REQUEST: 使用 incoming request params
+  #     # COGNITO_USER_POOLS: 使用 CUP
+  #     Type: COGNITO_USER_POOLS
+  #     RestApiId: !Ref AppApi
+  #     # IdentitySource - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-authorizer.html
+  #     # 其他範例像是: method.request.header.Auth | method.request.querystring.Name
+  #     IdentitySource: method.request.header.authorizationToken  # 從 header 拿 authorizationToken
+  #     ProviderARNs:
+  #       - !GetAtt MySimpleCognitoUserPoolExample.Arn  # Existed Cognito User Pool Arn
+
+  AppFunction:  # LambdaFUnction
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.handler
+
+  AppFunctionPermission:  # ApiGw 調用 LambdaFn 的 Role
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AppFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AppApi}/*/GET/
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - RootMethodGet
+    Properties:
+      RestApiId: !Ref AppApi
+  
+  Stage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: Prod
+      RestApiId: !Ref AppApi
+      DeploymentId: !Ref Deployment
+
+  MySimpleCognitoUserPoolExample:  # 原作者範例沒這包, 這個自己生出來的
+    Type: AWS::Cognito::UserPool
+    Properties: 
+      UserPoolName: !Sub ${AWS::StackName}-UserPool
+      AdminCreateUserConfig: 
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes: 
+        - email
+      Schema: 
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      UsernameAttributes: 
+        - email
+      UserPoolTags:
+          Key: Name
+          Value: !Sub ${AWS::StackName} User Pool
+
+Outputs:
+  AppApiEndpoint:
+    Description: API Endpoint
+    Value: !Sub "https://${AppApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
