@@ -6,5 +6,10 @@
 
 exports.handler = async (event, context) => ({
   statusCode: 200,
-  body: JSON.stringify(event)
+  body: JSON.stringify({
+    isBase64Encoded: true | false,
+    statusCode: httpStatusCode,
+    headers: { headerName: "headerValue" },
+    body: "Successful"
+  })
 });

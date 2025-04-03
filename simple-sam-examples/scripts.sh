@@ -91,4 +91,30 @@ example_apigw_usage_plan() {
 
 example_apigw_cognito_auth() {
   sam deploy -t tmpl__apigw-rest-api-cognito.yaml
+  API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='AppApiEndpoint'].OutputValue")
+  echo $API_ENDPOINT
+
+  CognitoAppClientId=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='MyUserPoolClient'].OutputValue")
+  echo $CognitoAppClientId
+
+  # 首次登入時必須要重設密碼 (每個 user 進行過一次即可)
+  NEWLY_PASSWORD=
+  aws cognito-idp respond-to-auth-challenge \
+    --client-id "$CognitoAppClientId" \
+    --challenge-name NEW_PASSWORD_REQUIRED \
+    --challenge-responses USERNAME=tonychoucc@gmail.com,NEW_PASSWORD=$NEWLY_PASSWORD,userAttributes.name=tonychoucc \
+    --session "$SESSION"
+  # 如果看到 NEW_PASSWORD_REQUIRED, 就表示須要重設密碼
+
+  # 登入到 Cognito
+  aws cognito-idp initiate-auth \
+    --auth-flow USER_PASSWORD_AUTH \
+    --client-id $CognitoAppClientId \
+    --auth-parameters USERNAME=tonychoucc@gmail.com,PASSWORD=$NEWLY_PASSWORD
+  # response SESSION 非常的長, 快要 1000 字
+
+  curl -i $API_ENDPOINT
+  # 401
+
+  curl -i -H "token: $token" $API_ENDPOINT
 }

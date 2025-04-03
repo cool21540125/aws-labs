@@ -20,28 +20,27 @@ Resources:
       RestApiId: !Ref AppApi
       ResourceId: !GetAtt AppApi.RootResourceId
       HttpMethod: GET
-      AuthorizationType: None
-      # AuthorizationType: COGNITO_USER_POOLS
-      # AuthorizerId: !Ref AuthorizersCognitoUserPools
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref AuthorizersCognitoUserPools
       Integration:
         Type: AWS_PROXY  # AWS | AWS_PROXY | HTTP | HTTP_PROXY | MOCK . 目前情境為 Lambda proxy integration
         IntegrationHttpMethod: POST
         Uri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt AppFunction.Arn, '/invocations']]
 
-  # AuthorizersCognitoUserPools:  # ApiGw 的 CUP Authorizer
-  #   Type: AWS::ApiGateway::Authorizer
-  #   Properties:
-  #     Name: CognitoAuthorizer
-  #     # TOKEN: 使用 custom Header 的 single authorization token
-  #     # REQUEST: 使用 incoming request params
-  #     # COGNITO_USER_POOLS: 使用 CUP
-  #     Type: COGNITO_USER_POOLS
-  #     RestApiId: !Ref AppApi
-  #     # IdentitySource - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-authorizer.html
-  #     # 其他範例像是: method.request.header.Auth | method.request.querystring.Name
-  #     IdentitySource: method.request.header.authorizationToken  # 從 header 拿 authorizationToken
-  #     ProviderARNs:
-  #       - !GetAtt MySimpleCognitoUserPoolExample.Arn  # Existed Cognito User Pool Arn
+  AuthorizersCognitoUserPools:  # ApiGw 的 CUP Authorizer
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: CognitoAuthorizer
+      # TOKEN: 使用 custom Header 的 single authorization token
+      # REQUEST: 使用 incoming request params
+      # COGNITO_USER_POOLS: 使用 CUP
+      Type: COGNITO_USER_POOLS
+      RestApiId: !Ref AppApi
+      # IdentitySource - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-authorizer.html
+      # 其他範例像是: method.request.header.Auth | method.request.querystring.Name
+      IdentitySource: method.request.header.token  # 從 header 拿 token
+      ProviderARNs:
+        - !GetAtt MySimpleCognitoUserPoolExample.Arn  # Existed Cognito User Pool Arn
 
   AppFunction:  # LambdaFUnction
     Type: AWS::Serverless::Function
@@ -93,7 +92,20 @@ Resources:
           Key: Name
           Value: !Sub ${AWS::StackName} User Pool
 
+  MyUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: MyAppClient
+      UserPoolId: !Ref MySimpleCognitoUserPoolExample
+      GenerateSecret: false  # 如果是前端應用，設為 false；後端則可設為 true
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH  # 允許用戶名和密碼登入
+        - ALLOW_REFRESH_TOKEN_AUTH
+
 Outputs:
   AppApiEndpoint:
     Description: API Endpoint
     Value: !Sub "https://${AppApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+  MyUserPoolClient:
+    Description: Cognito User Pool Client
+    Value: !Ref MyUserPoolClient
