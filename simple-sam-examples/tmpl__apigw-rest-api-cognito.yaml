@@ -45,6 +45,7 @@ Resources:
   AppFunction:  # LambdaFUnction
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: src/apigw-rest-api-cognito/
       Handler: app.handler
 
   AppFunctionPermission:  # ApiGw 調用 LambdaFn 的 Role

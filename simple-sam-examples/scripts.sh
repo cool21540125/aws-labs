@@ -117,4 +117,5 @@ example_apigw_cognito_auth() {
   # 401
 
   curl -i -H "token: $token" $API_ENDPOINT
+  # 200
 }
