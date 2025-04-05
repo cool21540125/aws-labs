@@ -85,7 +85,7 @@ example_apigw_usage_plan() {
   sam delete
 }
 
-### ======================  ======================
+### ====================== Rest Api Gateway + Authorizer (using Cognito) ======================
 # https://serverlessland.com/patterns/apigw-cognito-authorizer-sam-nodejs
 # https://github.com/aws-samples/serverless-patterns/tree/main/cognito-restapi
 
@@ -118,4 +118,17 @@ example_apigw_cognito_auth() {
 
   curl -i -H "token: $token" $API_ENDPOINT
   # 200
+}
+
+### ====================== Rest Api Gateway + CloudWatch access log (with formats) ======================
+# https://serverlessland.com/patterns/apigw-cloudwatch
+# https://github.com/aws-samples/serverless-patterns/tree/main/apigw-cloudwatch
+
+example_apigw_cloudwatch_access_logs() {
+  sam deploy -t tmpl__apigw-rest-api-cloudwatch.yaml
+  API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue")
+  echo $API_ENDPOINT
+
+  ## NOTE: 依照作者給的東西, 依舊沒辦法真的看到 ApiGw 的 access logs; 不過, X-Ray traces 有東西(但還沒能力識別)
+  curl -i $API_ENDPOINT
 }

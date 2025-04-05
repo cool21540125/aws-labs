@@ -5,7 +5,6 @@ Description: Serverless patterns - Amazon API Gateway REST API with Cognito User
 Globals:
   Function:
     Runtime: nodejs22.x
-    CodeUri: src/
 
 Resources:
   AppApi:  # Rest Api Gateway
