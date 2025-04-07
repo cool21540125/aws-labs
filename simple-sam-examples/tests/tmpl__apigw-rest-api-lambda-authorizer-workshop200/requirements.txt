@@ -1,0 +1,7 @@
+datetime
+boto3
+python-jose
+pytest>=7
+moto==3.1.19
+pytest-freezegun
+requests

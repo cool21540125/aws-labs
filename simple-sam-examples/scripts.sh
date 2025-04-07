@@ -129,6 +129,42 @@ example_apigw_cloudwatch_access_logs() {
   API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue")
   echo $API_ENDPOINT
 
-  ## NOTE: 依照作者給的東西, 依舊沒辦法真的看到 ApiGw 的 access logs; 不過, X-Ray traces 有東西(但還沒能力識別)
+  ## WARNING: 依照作者給的東西, 依舊沒辦法真的看到 ApiGw 的 access logs; 不過, X-Ray traces 有東西(但還沒能力識別)
   curl -i $API_ENDPOINT
+}
+
+### ====================== Workshop - Rest Api Gateway + Lambda Authorizer + Cognito User Pool + DynamoDB ======================
+# https://catalog.workshops.aws/serverless-patterns/en-US/module2/sam-python
+workshop_apigw_authorizer_cup() {
+
+  module_m2_2() {
+    git checkout WorkshopApiGwServerlessPattern200M22
+
+    ## 初始化 DynamoDB && LambdaFn(用來 CRUD DynamoDB)
+    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+
+    # 簡單調用 LambdaFn (直接尻 LambdaFn, 建立一筆 DDB record)
+    sam local invoke UsersFunction \
+      --template tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml \
+      --event events/tmpl__apigw-rest-api-lambda-authorizer-workshop200/event-post-user.json \
+      --env-vars envs/tmpl__apigw-rest-api-lambda-authorizer-workshop200/env.json
+
+    # Output
+    DDB_TABLE=$(aws cloudformation describe-stacks \
+      --stack-name simple-sam-examples \
+      --output text \
+      --query "Stacks[0].Outputs[?OutputKey=='UsersTable'].OutputValue")
+    echo $DDB_TABLE
+
+    # Query from Ddb
+    aws dynamodb get-item \
+      --table-name $DDB_TABLE \
+      --key '{"userid": {"S": "YOUR_DDB_TABLE_RECORD_ID"}}'
+
+    # 簡單調用 LambdaFn (直接尻 LambdaFn, 建立一筆 DDB record)
+    sam local invoke UsersFunction \
+      --template tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml \
+      --event events/tmpl__apigw-rest-api-lambda-authorizer-workshop200/event-post-user2.json \
+      --env-vars envs/tmpl__apigw-rest-api-lambda-authorizer-workshop200/env.json
+  }
 }
