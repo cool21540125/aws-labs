@@ -261,10 +261,19 @@ workshop_apigw_authorizer_cup() {
   }
 
   module_m2_4() {
+    # https://catalog.workshops.aws/serverless-patterns/en-US/module2/sam-python/test-unit
     git checkout WorkshopApiGwServerlessPattern200M24
 
     ## 單元測試 Unit test
     python3 -m pip install -r tests/apigw_rest_api_lambda_authorizer_workshop200/requirements.txt
     python3 -m pytest tests/apigw_rest_api_lambda_authorizer_workshop200/unit -v
+  }
+
+  module_m2_5() {
+    # https://catalog.workshops.aws/serverless-patterns/en-US/module2/sam-python/test-integration
+    git checkout WorkshopApiGwServerlessPattern200M25
+
+    export ENV_STACK_NAME=simple-sam-examples
+    python3 -m pytest tests/apigw_rest_api_lambda_authorizer_workshop200/integration -v
   }
 }
