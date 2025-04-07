@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  SAM Template for Serverless Patterns v3 Connect API
+  SAM Template for Serverless Patterns v4 - Cognito
 
 Globals:
   Function:
@@ -9,6 +9,12 @@ Globals:
     MemorySize: 128
     Timeout: 100
     Tracing: Active
+
+Parameters:
+  UserPoolAdminGroupName:
+    Description: User pool group name for API administrators 
+    Type: String
+    Default: apiAdmins
 
 Resources:
   UsersTable:
@@ -78,6 +84,67 @@ Resources:
         Name: !Sub "${AWS::StackName}-API"
         Stack: !Sub "${AWS::StackName}"
 
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties: 
+      UserPoolName: !Sub ${AWS::StackName}-UserPool
+      AdminCreateUserConfig: 
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes: 
+        - email
+      Schema: 
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      UsernameAttributes: 
+        - email
+      UserPoolTags:
+          Key: Name
+          Value: !Sub ${AWS::StackName} User Pool
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties: 
+      ClientName: 
+        !Sub ${AWS::StackName}UserPoolClient
+      ExplicitAuthFlows: 
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      RefreshTokenValidity: 30
+      SupportedIdentityProviders: 
+        - COGNITO
+      UserPoolId: !Ref UserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - 'code'
+      AllowedOAuthScopes:
+        - 'email'
+        - 'openid'
+      CallbackURLs:
+        - 'http://localhost'
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties: 
+      Domain: !Ref UserPoolClient
+      UserPoolId: !Ref UserPool
+
+  ApiAdministratorsUserPoolGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Description: User group for API Administrators
+      GroupName: !Ref UserPoolAdminGroupName
+      Precedence: 0
+      UserPoolId: !Ref UserPool
+
 Outputs:
   UsersTable:
     Description: DynamoDB Users table
@@ -89,3 +156,23 @@ Outputs:
   APIEndpoint:
     Description: "API Gateway endpoint URL"
     Value: !Sub "https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+  UserPool:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  UserPoolClient:
+    Description: Cognito User Pool Application Client ID
+    Value: !Ref UserPoolClient
+
+  UserPoolAdminGroupName:
+    Description: User Pool group name for API administrators
+    Value: !Ref UserPoolAdminGroupName
+  
+  CognitoLoginURL:
+    Description: Cognito User Pool Application Client Hosted Login UI URL
+    Value: !Sub "https://${UserPoolClient}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${UserPoolClient}&response_type=code&redirect_uri=http://localhost"
+
+  CognitoAuthCommand:
+    Description: AWS CLI command for Amazon Cognito User Pool authentication
+    Value: !Sub "aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id ${UserPoolClient} --auth-parameters USERNAME=<user@example.com>,PASSWORD=<password> --query 'AuthenticationResult.IdToken' --output text"

@@ -180,4 +180,28 @@ workshop_apigw_authorizer_cup() {
     # 直接調用 Api Endpoint 做查詢 (此時尚無需做認證)
     curl $API_ENDPOINT/users
   }
+
+  module_m2_3_1() {
+    git checkout WorkshopApiGwServerlessPattern200M231
+
+    ## 增加 Cognito User Pool
+    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+
+    COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='UserPoolClient'].OutputValue")
+
+    ## 註冊一個 Cognito User
+    # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cognito-idp/sign-up.html#examples
+    PASSWORD=
+    aws cognito-idp sign-up --client-id $COGNITO_CLIENT_ID --username cool21540125@gmail.com --password $PASSWORD --user-attributes Name="email",Value="cool21540125@gmail.com" Name="name",Value="tony"
+    # 成功以後, 去收信, 會拿到一個 verification code, 例如: 350035
+
+    ## 註冊完後驗證
+    # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cognito-idp/confirm-sign-up.html#examples
+    VERIFICATION_CODE=
+    aws cognito-idp confirm-sign-up --client-id $COGNITO_CLIENT_ID --username=cool21540125@gmail.com --confirmation-code $VERIFICATION_CODE
+    # 成功的話, 不會有 response (只能從 Web Console 上頭確認 ~"~")
+
+    ## 尚未啟用認證 (依舊可正常訪問)
+    curl $API_ENDPOINT/users
+  }
 }
