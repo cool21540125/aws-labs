@@ -167,4 +167,17 @@ workshop_apigw_authorizer_cup() {
       --event events/tmpl__apigw-rest-api-lambda-authorizer-workshop200/event-post-user2.json \
       --env-vars envs/tmpl__apigw-rest-api-lambda-authorizer-workshop200/env.json
   }
+
+  module_m2_3() {
+    git checkout WorkshopApiGwServerlessPattern200M23
+
+    ## 增加 Rest Api Gateway
+    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+
+    export API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='APIEndpoint'].OutputValue")
+    echo "API endpoint: $API_ENDPOINT"
+
+    # 直接調用 Api Endpoint 做查詢 (此時尚無需做認證)
+    curl $API_ENDPOINT/users
+  }
 }
