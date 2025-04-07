@@ -141,11 +141,11 @@ workshop_apigw_authorizer_cup() {
     git checkout WorkshopApiGwServerlessPattern200M22
 
     ## 初始化 DynamoDB && LambdaFn(用來 CRUD DynamoDB)
-    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+    sam deploy -t tmpl__apigw_rest_api_lambda_authorizer_workshop200
 
     # 簡單調用 LambdaFn (直接尻 LambdaFn, 建立一筆 DDB record)
     sam local invoke UsersFunction \
-      --template tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml \
+      --template tmpl__apigw_rest_api_lambda_authorizer_workshop200 \
       --event events/tmpl__apigw-rest-api-lambda-authorizer-workshop200/event-post-user.json \
       --env-vars envs/tmpl__apigw-rest-api-lambda-authorizer-workshop200/env.json
 
@@ -163,7 +163,7 @@ workshop_apigw_authorizer_cup() {
 
     # 簡單調用 LambdaFn (直接尻 LambdaFn, 建立一筆 DDB record)
     sam local invoke UsersFunction \
-      --template tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml \
+      --template tmpl__apigw_rest_api_lambda_authorizer_workshop200 \
       --event events/tmpl__apigw-rest-api-lambda-authorizer-workshop200/event-post-user2.json \
       --env-vars envs/tmpl__apigw-rest-api-lambda-authorizer-workshop200/env.json
   }
@@ -172,7 +172,7 @@ workshop_apigw_authorizer_cup() {
     git checkout WorkshopApiGwServerlessPattern200M23
 
     ## 增加 Rest Api Gateway
-    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+    sam deploy -t tmpl__apigw_rest_api_lambda_authorizer_workshop200
 
     export API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='APIEndpoint'].OutputValue")
     echo "API endpoint: $API_ENDPOINT"
@@ -185,7 +185,7 @@ workshop_apigw_authorizer_cup() {
     git checkout WorkshopApiGwServerlessPattern200M231
 
     ## 增加 Cognito User Pool
-    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+    sam deploy -t tmpl__apigw_rest_api_lambda_authorizer_workshop200
 
     COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='UserPoolClient'].OutputValue")
 
@@ -218,7 +218,7 @@ workshop_apigw_authorizer_cup() {
     zip -r src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/python.zip src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/layer/python
 
     ## 將 Rest Api Gateway 加上驗證機制 (secure API), 並要求使用 Lambda Authorizer(custom authorizer) 做驗證
-    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+    sam deploy -t tmpl__apigw_rest_api_lambda_authorizer_workshop200
 
     ## 使用 USER_PASSWORD_AUTH 方式認證並登入到 Cognito, 取得 token
     # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cognito-idp/initiate-auth.html#examples
@@ -258,5 +258,13 @@ workshop_apigw_authorizer_cup() {
 
     ## 這時候再來拿, 就有東西了
     curl -i $API_ENDPOINT/users/$SUB -H "Authorization:$ID_TOKEN"
+  }
+
+  module_m2_4() {
+    git checkout WorkshopApiGwServerlessPattern200M24
+
+    ## 單元測試 Unit test
+    python3 -m pip install -r tests/apigw_rest_api_lambda_authorizer_workshop200/requirements.txt
+    python3 -m pytest tests/apigw_rest_api_lambda_authorizer_workshop200/unit -v
   }
 }

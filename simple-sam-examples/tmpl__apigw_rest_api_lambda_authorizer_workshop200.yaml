@@ -37,7 +37,7 @@ Resources:
     Properties:
       LayerName: libAuthorizer
       Description: layers for lib
-      ContentUri: src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/layer
+      ContentUri: src/apigw_rest_api_lambda_authorizer_workshop200/dependencies/layer
       CompatibleRuntimes:
         - python3.12
       CompatibleArchitectures:
@@ -48,7 +48,7 @@ Resources:
   UsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/apigw-rest-api-lambda-authorizer-workshop200
+      CodeUri: src/apigw_rest_api_lambda_authorizer_workshop200
       Handler: users.lambda_handler
       Description: Handler for all users related operations
       Environment:
@@ -172,7 +172,7 @@ Resources:
   AuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/apigw-rest-api-lambda-authorizer-workshop200
+      CodeUri: src/apigw_rest_api_lambda_authorizer_workshop200
       Handler: authorizer.lambda_handler
       Description: Handler for Lambda authorizer
       Layers:
