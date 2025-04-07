@@ -204,4 +204,59 @@ workshop_apigw_authorizer_cup() {
     ## 尚未啟用認證 (依舊可正常訪問)
     curl $API_ENDPOINT/users
   }
+
+  module_m2_3_2() {
+    git checkout WorkshopApiGwServerlessPattern200M232
+
+    # 前置作業
+    mkdir -p src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/layer/python/lib/python3.12/site-packages
+
+    ## Layer (a.k.a. requirements.txt 有異動, 就需要重新執行)
+    pip install \
+      -r src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/requirements.txt \
+      -t src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/layer/python
+    zip -r src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/python.zip src/apigw-rest-api-lambda-authorizer-workshop200/dependencies/layer/python
+
+    ## 將 Rest Api Gateway 加上驗證機制 (secure API), 並要求使用 Lambda Authorizer(custom authorizer) 做驗證
+    sam deploy -t tmpl__apigw-rest-api-lambda-authorizer-workshop200.yaml
+
+    ## 使用 USER_PASSWORD_AUTH 方式認證並登入到 Cognito, 取得 token
+    # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cognito-idp/initiate-auth.html#examples
+    ID_TOKEN=$(aws cognito-idp initiate-auth \
+      --auth-flow USER_PASSWORD_AUTH \
+      --client-id $COGNITO_CLIENT_ID \
+      --auth-parameters "USERNAME=cool21540125@gmail.com,PASSWORD=$PASSWORD" \
+      --query 'AuthenticationResult.IdToken' \
+      --output text)
+    # 會拿到一包超級長的 token string (這就是 JWT Token)
+
+    ## Cognito Login Url
+    UserPoolId=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='UserPool'].OutputValue")
+
+    UserPoolClient=$(aws cloudformation describe-stacks --stack-name simple-sam-examples --output text --query "Stacks[0].Outputs[?OutputKey=='UserPoolClient'].OutputValue")
+    echo "https://${UserPoolClient}.auth.us-west-2.amazoncognito.com/login?client_id=${UserPoolClient}&response_type=code&redirect_uri=http://localhost"
+    # 上面我還不曉得實際用途... 但可以 redirect 到其他頁面 (似乎這就是所謂的 Authorization Code Flow?)
+
+    curl -i $API_ENDPOINT/users
+    # 401 {"message":"Unauthorized"}%
+
+    # 目前 User 對於自己所擁有的 Resources 的 principalID, 並無相應資源 (也就是沒有屬於你的東西啦)
+    curl -i $API_ENDPOINT/users -H "Authorization:$ID_TOKEN"
+    # 403 {"Message":"User is not authorized to access this resource"}%
+
+    ## 把 ID_TOKEN 拿到 https://jwt.io/ 做 decode
+    SUB=
+
+    ## 即使此時 DB 有東西, 也拿不到東西 (因為都不是此 User 的)
+    curl -i $API_ENDPOINT/users/$SUB -H "Authorization:$ID_TOKEN"
+
+    ## 使用自己登入後的 JWT token, 新增一筆資源
+    curl --location --request PUT "$API_ENDPOINT/users/$SUB" \
+      --data-raw '{"name": "My name is WhatTheParkWorld"}' \
+      --header "Authorization: $ID_TOKEN" \
+      --header "Content-Type: application/json"
+
+    ## 這時候再來拿, 就有東西了
+    curl -i $API_ENDPOINT/users/$SUB -H "Authorization:$ID_TOKEN"
+  }
 }
