@@ -4,7 +4,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  SAM Template for Serverless Patterns v5 - JWT Authorizer
+  SAM Template for Serverless Patterns v6 - Observability
 
 Globals:
   Function:
@@ -107,6 +107,14 @@ Resources:
             Identity:
               Headers:
                 - Authorization
+      AccessLogSetting:
+        DestinationArn: !GetAtt AccessLogs.Arn
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+      MethodSettings:
+        - ResourcePath: "/*"
+          LoggingLevel: INFO
+          HttpMethod: "*"
+          DataTraceEnabled: True
 
   UserPool:
     Type: AWS::Cognito::UserPool
@@ -184,6 +192,34 @@ Resources:
           ADMIN_GROUP_NAME: !Ref UserPoolAdminGroupName
       Tags:
         Stack: !Sub "${AWS::StackName}"
+
+  ApiLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  ApiGatewayAccountLoggingSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiLoggingRole.Arn
+
+  AccessLogs:
+    Type: AWS::Logs::LogGroup
+    DependsOn: ApiLoggingRole
+    DeletionPolicy: Delete
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/ApiGateway/${AWS::StackName}/AccessLogs"
 
 Outputs:
   UsersTable:
