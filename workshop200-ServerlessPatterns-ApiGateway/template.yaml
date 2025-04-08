@@ -3,7 +3,7 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |
   SAM Template for Serverless Patterns v6 - Observability
 
 Globals:
@@ -15,7 +15,7 @@ Globals:
 
 Parameters:
   UserPoolAdminGroupName:
-    Description: User pool group name for API administrators 
+    Description: User pool group name for API administrators
     Type: String
     Default: apiAdmins
 
@@ -37,7 +37,7 @@ Resources:
     Properties:
       LayerName: libAuthorizer
       Description: layers for lib
-      ContentUri: src/apigw_rest_api_lambda_authorizer_workshop200/dependencies/layer
+      ContentUri: layer/
       CompatibleRuntimes:
         - python3.12
       CompatibleArchitectures:
@@ -48,7 +48,7 @@ Resources:
   UsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/apigw_rest_api_lambda_authorizer_workshop200
+      CodeUri: src/
       Handler: users.lambda_handler
       Description: Handler for all users related operations
       Environment:
@@ -58,7 +58,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
       Tags:
-        Stack: !Sub "${AWS::StackName}"
+        Stack: !Sub ${AWS::StackName}
       Events:
         GetUsersEvent:
           Type: Api
@@ -97,8 +97,8 @@ Resources:
       StageName: Prod
       TracingEnabled: true
       Tags:
-        Name: !Sub "${AWS::StackName}-API"
-        Stack: !Sub "${AWS::StackName}"
+        Name: !Sub ${AWS::StackName}-API
+        Stack: !Sub ${AWS::StackName}
       Auth:
         DefaultAuthorizer: LambdaTokenAuthorizer
         Authorizers:
@@ -109,22 +109,28 @@ Resources:
                 - Authorization
       AccessLogSetting:
         DestinationArn: !GetAtt AccessLogs.Arn
-        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey",
+          "status":"$context.status","protocol":"$context.protocol",
+          "integrationStatus": $context.integrationStatus, "integrationLatency":
+          $context.integrationLatency,
+          "responseLength":"$context.responseLength" }'
       MethodSettings:
-        - ResourcePath: "/*"
+        - ResourcePath: /*
           LoggingLevel: INFO
-          HttpMethod: "*"
-          DataTraceEnabled: True
+          HttpMethod: '*'
+          DataTraceEnabled: true
 
   UserPool:
     Type: AWS::Cognito::UserPool
-    Properties: 
+    Properties:
       UserPoolName: !Sub ${AWS::StackName}-UserPool
-      AdminCreateUserConfig: 
+      AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-      AutoVerifiedAttributes: 
+      AutoVerifiedAttributes:
         - email
-      Schema: 
+      Schema:
         - Name: name
           AttributeDataType: String
           Mutable: true
@@ -133,39 +139,38 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-      UsernameAttributes: 
+      UsernameAttributes:
         - email
       UserPoolTags:
-          Key: Name
-          Value: !Sub ${AWS::StackName} User Pool
+        Key: Name
+        Value: !Sub ${AWS::StackName} User Pool
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
-    Properties: 
-      ClientName: 
-        !Sub ${AWS::StackName}UserPoolClient
-      ExplicitAuthFlows: 
+    Properties:
+      ClientName: !Sub ${AWS::StackName}UserPoolClient
+      ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       GenerateSecret: false
       PreventUserExistenceErrors: ENABLED
       RefreshTokenValidity: 30
-      SupportedIdentityProviders: 
+      SupportedIdentityProviders:
         - COGNITO
       UserPoolId: !Ref UserPool
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
-        - 'code'
+        - code
       AllowedOAuthScopes:
-        - 'email'
-        - 'openid'
+        - email
+        - openid
       CallbackURLs:
-        - 'http://localhost'
+        - http://localhost
 
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
-    Properties: 
+    Properties:
       Domain: !Ref UserPoolClient
       UserPoolId: !Ref UserPool
 
@@ -180,7 +185,7 @@ Resources:
   AuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/apigw_rest_api_lambda_authorizer_workshop200
+      CodeUri: src/
       Handler: authorizer.lambda_handler
       Description: Handler for Lambda authorizer
       Layers:
@@ -191,19 +196,19 @@ Resources:
           APPLICATION_CLIENT_ID: !Ref UserPoolClient
           ADMIN_GROUP_NAME: !Ref UserPoolAdminGroupName
       Tags:
-        Stack: !Sub "${AWS::StackName}"
+        Stack: !Sub ${AWS::StackName}
 
   ApiLoggingRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service:
                 - apigateway.amazonaws.com
-            Action: "sts:AssumeRole"
+            Action: sts:AssumeRole
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
@@ -219,19 +224,19 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/ApiGateway/${AWS::StackName}/AccessLogs"
+      LogGroupName: !Sub /ApiGateway/${AWS::StackName}/AccessLogs
 
 Outputs:
   UsersTable:
     Description: DynamoDB Users table
     Value: !Ref UsersTable
   UsersFunction:
-    Description: "Lambda function used to perform actions on the users data"
+    Description: Lambda function used to perform actions on the users data
     Value: !Ref UsersFunction
 
   APIEndpoint:
-    Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod
 
   UserPool:
     Description: Cognito User Pool ID
@@ -244,11 +249,14 @@ Outputs:
   UserPoolAdminGroupName:
     Description: User Pool group name for API administrators
     Value: !Ref UserPoolAdminGroupName
-  
+
   CognitoLoginURL:
     Description: Cognito User Pool Application Client Hosted Login UI URL
-    Value: "https://${UserPoolClient}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${UserPoolClient}&response_type=code&redirect_uri=http://localhost"
+    Value: https://${UserPoolClient}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${UserPoolClient}&response_type=code&redirect_uri=http://localhost
 
   CognitoAuthCommand:
     Description: AWS CLI command for Amazon Cognito User Pool authentication
-    Value: !Sub "aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id ${UserPoolClient} --auth-parameters USERNAME=<username>,PASSWORD=<password> --query 'AuthenticationResult.IdToken' --output text"
+    Value: !Sub aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH
+      --client-id ${UserPoolClient} --auth-parameters
+      USERNAME=<username>,PASSWORD=<password> --query
+      'AuthenticationResult.IdToken' --output text

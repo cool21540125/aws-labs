@@ -6,9 +6,10 @@ Globals:
   Function:
     Runtime: nodejs22.x
     CodeUri: src/apigw-rest-api-usage-plan/
+    Architectures:
+      - arm64
 
 Resources:
-
   AppApi:
     Type: AWS::ApiGateway::RestApi  # (非 SAM) RestApi
     Properties:
@@ -27,17 +28,16 @@ Resources:
       Integration:  # ApiGw 的 backend
         Type: AWS_PROXY  # AWS | AWS_PROXY | HTTP | HTTP_PROXY | MOCK . 目前情境為 Lambda proxy integration
         IntegrationHttpMethod: POST
-        Uri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt AppFunction.Arn, '/invocations']]
+        # Uri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt AppFunction.Arn, '/invocations']]
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppFunction.Arn}/invocations'
 
   # Dummy function
   AppFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/apigw-rest-api-usage-plan/
       Handler: app.handler
 
-  # ApiGw 調用 LambdaFn 的 Role
-  AppFunctionPermission:
+  AppFunctionPermission:  # ApiGw 調用 LambdaFn 的 Role
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref AppFunction
@@ -52,8 +52,8 @@ Resources:
         - ApiId: !Ref AppApi
           Stage: !Ref Stage
 
-  ApiKey:  # 建立一把 ApiKey
-    Type: AWS::ApiGateway::ApiKey
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey  # 建立一把 ApiGateway - ApiKey
     Properties: 
       Enabled: True
 
@@ -62,7 +62,7 @@ Resources:
     # ApiKey 一定要關聯到 Api 及 Stage, 至於底下的 path 及 method 則可選擇性指定
     Type: AWS::ApiGateway::UsagePlanKey
     Properties:
-      KeyId: !Ref ApiKey  
+      KeyId: !Ref ApiKey
       KeyType: API_KEY
       UsagePlanId: !Ref UsagePlan
 

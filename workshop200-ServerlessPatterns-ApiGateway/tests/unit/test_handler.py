@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import sys
 
-sys.path.append("src/apigw-rest-api-lambda-authorizer-workshop200")
+sys.path.append("src")
 
 USERS_MOCK_TABLE_NAME = "Users"
 UUID_MOCK_VALUE_JOHN = "f8216640-91a2-11eb-8ab9-57aa454facef"
@@ -70,10 +70,10 @@ def put_data_dynamodb():
 )
 def test_get_list_of_users():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-get-all-users.json",
+            "./events/event-get-all-users.json",
             "r",
         ) as f:
             apigw_get_all_users_event = json.load(f)
@@ -97,10 +97,10 @@ def test_get_list_of_users():
 
 def test_get_single_user():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-get-user-by-id.json",
+            "./events/event-get-user-by-id.json",
             "r",
         ) as f:
             apigw_event = json.load(f)
@@ -117,10 +117,10 @@ def test_get_single_user():
 
 def test_get_single_user_wrong_id():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-get-user-by-id.json",
+            "./events/event-get-user-by-id.json",
             "r",
         ) as f:
             apigw_event = json.load(f)
@@ -135,10 +135,10 @@ def test_get_single_user_wrong_id():
 @pytest.mark.freeze_time("2001-01-01")
 def test_add_user():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-post-user.json",
+            "./events/event-post-user.json",
             "r",
         ) as f:
             apigw_event = json.load(f)
@@ -154,10 +154,10 @@ def test_add_user():
 @pytest.mark.freeze_time("2001-01-01")
 def test_add_user_with_id():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-post-user.json",
+            "./events/event-post-user.json",
             "r",
         ) as f:
             apigw_event = json.load(f)
@@ -175,10 +175,10 @@ def test_add_user_with_id():
 
 def test_delete_user():
     with my_test_environment():
-        from src.apigw_rest_api_lambda_authorizer_workshop200 import users
+        from src import users
 
         with open(
-            "./events/apigw_rest_api_lambda_authorizer_workshop200/event-delete-user-by-id.json",
+            "./events/event-delete-user-by-id.json",
             "r",
         ) as f:
             apigw_event = json.load(f)
