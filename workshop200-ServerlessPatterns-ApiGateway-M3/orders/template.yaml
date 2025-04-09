@@ -92,7 +92,7 @@ Resources:
     Properties:
         LayerName: pyutils
         Description: Shared utilities for Orders service 
-        ContentUri: src/layers/
+        ContentUri: src/layers
         CompatibleRuntimes:
           - python3.12
         RetentionPolicy: Delete
