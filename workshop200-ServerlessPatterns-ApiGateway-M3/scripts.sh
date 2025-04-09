@@ -14,8 +14,8 @@ echo $COGNITO_LOGIN_PAGE
 
 ### ======================== M3 1.1 ========================
 # ⬇️⬇️⬇️⬇️⬇️ 記得要設 ⬇️⬇️⬇️⬇️⬇️
-export USERS_STACK_NAME=workshop-serverless-patterns-apigateway-users-XZL005MV528A
-export ORDERS_STACK_NAME=workshop-serverless-patterns-apigateway-orders-1KE2WQWZI8459
+export USERS_STACK_NAME=workshop-serverless-patterns-apigateway-users-1E1MC07UCEHW9
+export ORDERS_STACK_NAME=workshop-serverless-patterns-apigateway-orders-EHGWSXH9MOI1
 # ⬆️⬆️⬆️⬆️⬆️ 記得要換設 ⬆️⬆️⬆️⬆️⬆️
 PYTHONPATH=orders pytest orders/tests/integration -v -W ignore::DeprecationWarning
 

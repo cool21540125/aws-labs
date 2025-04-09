@@ -18,3 +18,5 @@ Outputs:
   CognitoLoginURL:
     Description: Nested stack name for user
     Value: !GetAtt users.Outputs.CognitoLoginURL
+  UserStack:
+    Value: !Ref AWS::StackName

@@ -102,6 +102,7 @@ def clear_dynamo_tables():
 @pytest.fixture(scope="session")
 def global_config(request):
     """
+    # FIXME: tear_up 與 tear_down 沒有做得很好, 測試開始前會清空 DB, 測試完成後會留下一筆 test data...
     Load stack outputs, create user accounts, and clear database tables.
     """
     global globalConfig
