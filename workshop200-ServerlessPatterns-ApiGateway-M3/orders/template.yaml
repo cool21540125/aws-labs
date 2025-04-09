@@ -45,7 +45,7 @@ Resources:
           Module3CognitoAuthorizer:  # Sets Cognito user pool as default authorizer for API requests
             UserPoolArn: !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPool}"  # 來自於 root stack 拋進來的參數
 
-  AddOrderFunction:
+  AddOrderFunction:  # LambdaFN - create_order
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/api/order/create
@@ -63,6 +63,41 @@ Resources:
             Path: /orders
             Method: post
             RestApiId: !Ref WorkshopApiGateway
+
+  GetOrderFunction:  # LambdaFN - get_order
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/api/order/get
+      Handler: get_order.lambda_handler
+      Runtime: python3.12
+      Tracing: Active
+      Policies:
+        DynamoDBReadPolicy:
+          TableName: !Ref OrdersTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+      Layers:
+        - !Ref PyUtils
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /orders/{orderId}
+            Method: get
+            RestApiId: !Ref WorkshopApiGateway
+
+  PyUtils:  # LambdaFN Layer - get_order
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        LayerName: pyutils
+        Description: Shared utilities for Orders service 
+        ContentUri: src/layers/
+        CompatibleRuntimes:
+          - python3.12
+        RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.12
 
 Outputs:
   OrdersServiceEndpoint:  # Returns the API URL

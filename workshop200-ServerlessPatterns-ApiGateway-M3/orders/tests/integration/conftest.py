@@ -105,6 +105,7 @@ def global_config(request):
     Load stack outputs, create user accounts, and clear database tables.
     """
     global globalConfig
+
     # load outputs of the stacks to test
     globalConfig.update(get_stack_outputs(APPLICATION_STACK_NAME))
     globalConfig.update(get_stack_outputs(MODULE3_STACK_NAME))
