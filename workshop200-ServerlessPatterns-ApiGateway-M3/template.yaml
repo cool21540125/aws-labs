@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Module 3 start state
+
+Resources:
+  users:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./users/template.yaml
+  orders:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./orders/template.yaml
+      Parameters:
+        UserPool: !GetAtt users.Outputs.UserPool
+
+Outputs:
+  CognitoLoginURL:
+    Description: Nested stack name for user
+    Value: !GetAtt users.Outputs.CognitoLoginURL

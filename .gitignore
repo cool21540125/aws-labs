@@ -10,3 +10,4 @@ node_modules/
 **/gradle-wrapper.jar
 **/.aws-sam
 **/output.json
+**/__pycache__/
