@@ -48,7 +48,7 @@ Resources:
   AddOrderFunction:  # LambdaFN - create_order
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/api/order/create
+      CodeUri: src/api/
       Handler: create_order.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -67,10 +67,8 @@ Resources:
   GetOrderFunction:  # LambdaFN - get_order
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/api/order/get
+      CodeUri: src/api/
       Handler: get_order.lambda_handler
-      Runtime: python3.12
-      Tracing: Active
       Policies:
         DynamoDBReadPolicy:
           TableName: !Ref OrdersTable
@@ -84,6 +82,25 @@ Resources:
           Type: Api
           Properties:
             Path: /orders/{orderId}
+            Method: get
+            RestApiId: !Ref WorkshopApiGateway
+
+  ListOrdersFunction:  # LambdaFN - list_order
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/api/
+      Handler: list_orders.lambda_handler
+      Policies:
+        DynamoDBReadPolicy:
+          TableName: !Ref OrdersTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /orders
             Method: get
             RestApiId: !Ref WorkshopApiGateway
 

@@ -72,3 +72,16 @@ def test_get_order(global_config, orders_endpoint, user_token):
     assert order_info["totalAmount"] == 19.97
     assert order_info["restaurantId"] == 1
     assert len(order_info["orderItems"]) == 2
+
+
+def test_list_orders(global_config, orders_endpoint, user_token):
+    response = requests.get(
+        orders_endpoint,
+        headers={"Authorization": user_token, "Content-Type": "application/json"},
+    )
+    orders = json.loads(response.text)
+    assert len(orders["orders"]) == 1
+    assert orders["orders"][0]["orderId"] == global_config["orderId"]
+    assert orders["orders"][0]["totalAmount"] == 19.97
+    assert orders["orders"][0]["restaurantId"] == 1
+    assert len(orders["orders"][0]["orderItems"]) == 2
