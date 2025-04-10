@@ -113,3 +113,46 @@ def global_config(request):
     globalConfig.update(create_cognito_accounts())
     clear_dynamo_tables()
     return globalConfig
+
+
+@pytest.fixture(scope="function")
+def acknowledge_order_hook(request):
+    """
+    Fixture to set up an order to test cancel_order() operation.
+    - Before test: Creates an order in the database with "ACKNOWLEDGED" order status
+    - After test: Removes previously created order
+    """
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table(globalConfig["OrdersTable"])
+
+    # Create an order with "ACKNOWLEDGED" status
+    order_id = str(uuid.uuid4())
+    user_id = globalConfig["user1UserSub"]
+    order_data = {
+        "orderId": order_id,
+        "userId": user_id,
+        "data": {
+            "orderId": order_id,
+            "userId": user_id,
+            "restaurantId": 2,
+            "orderItems": [
+                {"name": "Artichoke Ravioli", "price": 9.99, "id": 1, "quantity": 1}
+            ],
+            "totalAmount": 9.99,
+            "status": "ACKNOWLEDGED",
+            "orderTime": datetime.strftime(datetime.utcnow(), "%Y-%m-%dT%H:%M:%SZ"),
+        },
+    }
+
+    ddb_item = json.loads(json.dumps(order_data), parse_float=Decimal)
+    table.put_item(Item=ddb_item)
+
+    globalConfig["ackOrderId"] = order_id
+
+    # Next, the test will run...
+    yield
+
+    # After the test runs; delete the item
+    key = {"userId": user_id, "orderId": order_id}
+
+    table.delete_item(Key=key)

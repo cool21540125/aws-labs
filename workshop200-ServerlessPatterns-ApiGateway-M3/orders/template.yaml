@@ -104,6 +104,48 @@ Resources:
             Method: get
             RestApiId: !Ref WorkshopApiGateway
 
+  EditOrderFunction:  # LambdaFN - edit_order
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/api/
+      Handler: edit_order.lambda_handler
+      Policies:
+        DynamoDBCrudPolicy:
+          TableName: !Ref OrdersTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+      Layers:
+        - !Ref PyUtils
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /orders/{orderId}
+            Method: put
+            RestApiId: !Ref WorkshopApiGateway
+
+  CancelOrderFunction:  # LambdaFN - cancel_order
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/api/
+      Handler: cancel_order.lambda_handler
+      Policies:
+        DynamoDBCrudPolicy:
+          TableName: !Ref OrdersTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+      Layers:
+        - !Ref PyUtils
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /orders/{orderId}
+            Method: delete
+            RestApiId: !Ref WorkshopApiGateway
+
   PyUtils:  # LambdaFN Layer - get_order
     Type: AWS::Serverless::LayerVersion
     Properties:
