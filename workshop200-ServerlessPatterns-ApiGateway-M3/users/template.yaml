@@ -421,3 +421,7 @@ Outputs:
   DashboardURL:
     Description: "Dashboard URL"
     Value: !Sub "https://console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${ApplicationDashboard}"
+
+  StackName:
+    Description: Stack name used for Integration test and maybe other usage
+    Value: !Ref AWS::StackName

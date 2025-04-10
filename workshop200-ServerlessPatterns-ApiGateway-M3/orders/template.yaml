@@ -106,3 +106,6 @@ Outputs:
   OrdersTable:
     Description: "DynamoDb Orders Table"
     Value: !Ref OrdersTable
+  StackName:
+    Description: Stack name used for Integration test and maybe other usage
+    Value: !Ref AWS::StackName

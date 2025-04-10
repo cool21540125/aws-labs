@@ -9,14 +9,13 @@ sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
 # CAPABILITY_AUTO_EXPAND : 用於處理 nested Template
 # 使用 root stack 包裹 user nested stack (用來做認證)
 
+export USERS_STACK_NAME=$(aws cloudformation describe-stacks --stack-name workshop-serverless-patterns-apigateway --output text --query "Stacks[0].Outputs[?OutputKey=='UserNestedStack'].OutputValue")
+export ORDERS_STACK_NAME=$(aws cloudformation describe-stacks --stack-name workshop-serverless-patterns-apigateway --output text --query "Stacks[0].Outputs[?OutputKey=='OrderNestedStack'].OutputValue")
 COGNITO_LOGIN_PAGE=$(aws cloudformation describe-stacks --stack-name workshop-serverless-patterns-apigateway --output text --query "Stacks[0].Outputs[?OutputKey=='CognitoLoginURL'].OutputValue")
 echo $COGNITO_LOGIN_PAGE
 
 ### ======================== M3 1.1 ========================
-# ⬇️⬇️⬇️⬇️⬇️ 記得要設 ⬇️⬇️⬇️⬇️⬇️
-export USERS_STACK_NAME=workshop-serverless-patterns-apigateway-users-1E1MC07UCEHW9
-export ORDERS_STACK_NAME=workshop-serverless-patterns-apigateway-orders-EHGWSXH9MOI1
-# ⬆️⬆️⬆️⬆️⬆️ 記得要換設 ⬆️⬆️⬆️⬆️⬆️
+## Integration tests
 PYTHONPATH=orders pytest orders/tests/integration -v -W ignore::DeprecationWarning
 
 ###

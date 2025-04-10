@@ -16,7 +16,13 @@ Resources:
 
 Outputs:
   CognitoLoginURL:
-    Description: Nested stack name for user
+    Description: Cognito Login Page
     Value: !GetAtt users.Outputs.CognitoLoginURL
-  UserStack:
-    Value: !Ref AWS::StackName
+
+  UserNestedStack:
+    Description: Nested stack name for users
+    Value: !GetAtt users.Outputs.StackName
+
+  OrderNestedStack:
+    Description: Nested stack name for orders
+    Value: !GetAtt orders.Outputs.StackName
