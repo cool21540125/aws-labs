@@ -4,10 +4,6 @@ exit 0
 
 ## 由於使用到 sub stack (因此需要留意 capability 的問題)
 sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
-# CAPABILITY_IAM         : CloudFormation 在部署過程中, 建立/修改 IAM && 它的名稱是由 CloudFormation 自動生成
-# CAPABILITY_NAMED_IAM   : CloudFormation 在部署過程中, 建立/修改 IAM && 具體指明了 IAM 資源名稱, 則必須使用 CAPABILITY_NAMED_IAM (可視為 CAPABILITY_IAM 的進階版)
-# CAPABILITY_AUTO_EXPAND : 用於處理 nested Template
-# 使用 root stack 包裹 user nested stack (用來做認證)
 
 export USERS_STACK_NAME=$(aws cloudformation describe-stacks --stack-name workshop-serverless-patterns-apigateway --output text --query "Stacks[0].Outputs[?OutputKey=='UserNestedStack'].OutputValue")
 export ORDERS_STACK_NAME=$(aws cloudformation describe-stacks --stack-name workshop-serverless-patterns-apigateway --output text --query "Stacks[0].Outputs[?OutputKey=='OrderNestedStack'].OutputValue")
